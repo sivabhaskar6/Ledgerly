@@ -84,3 +84,12 @@ export type ImportBatch = {
   skipped_count: number;
   created_at: string;
 };
+
+export type CapitalEntry = {
+  id: string;
+  amount_paise: number;
+  occurred_on: string;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+};
