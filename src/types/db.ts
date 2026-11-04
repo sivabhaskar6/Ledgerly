@@ -93,3 +93,32 @@ export type CapitalEntry = {
   created_at: string;
   updated_at: string;
 };
+
+export type FnoInstrumentType = "call" | "put" | "future";
+export type FnoTradeType = "buy_first" | "sell_first";
+
+export type FnoTrade = {
+  id: string;
+  account_id: string | null;
+  income_id: string | null;
+  symbol: string;
+  instrument_type: FnoInstrumentType;
+  strike_price_paise: number | null;
+  expiry_date: string | null;
+  trade_type: FnoTradeType;
+  quantity: number;
+  buy_price_paise: number;
+  sell_price_paise: number;
+  charges_paise: number;
+  gross_pnl_paise: number;
+  net_pnl_paise: number;
+  occurred_on: string;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type FnoTradeWithRefs = FnoTrade & {
+  account: { name: string } | null;
+};
+

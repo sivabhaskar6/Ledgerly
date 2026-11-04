@@ -78,6 +78,15 @@ export async function fetchFullReport(db: SupabaseClient, filter: ReportFilter):
     if (!incErr && incomeData) {
       totalIncomePaise = incomeData.reduce((sum, r) => sum + Number(r.amount_paise), 0);
     }
+
+    // Also include any unsynced F&O trades (where income_id is null)
+    let fnoQuery = db.from("fno_trades").select("net_pnl_paise, occurred_on").is("income_id", null);
+    if (filter.from) fnoQuery = fnoQuery.gte("occurred_on", filter.from);
+    if (filter.to) fnoQuery = fnoQuery.lte("occurred_on", filter.to);
+    const { data: unsyncedTrades } = await fnoQuery;
+    if (unsyncedTrades) {
+      totalIncomePaise += unsyncedTrades.reduce((sum, r) => sum + Number(r.net_pnl_paise || 0), 0);
+    }
   } catch {
     // Continue
   }

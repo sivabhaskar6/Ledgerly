@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { Plus, Landmark } from "lucide-react";
+import { Plus, Landmark, CandlestickChart } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { DEFAULT_FILTERS, errorMessage, fetchExpenses, fetchSummary } from "@/lib/data/expenses";
 import { fetchIncomeSummary } from "@/lib/data/income";
@@ -97,11 +97,32 @@ export function DashboardView() {
     { label: "Spent today", value: metrics && formatINR(metrics.todayExpense), href: "/expenses" },
     { label: "Spent this month", value: metrics && formatINR(metrics.monthExpense), href: "/expenses" },
     { label: "Spent this year", value: metrics && formatINR(metrics.yearExpense), href: "/reports" },
-    { label: "Income this month", value: metrics && formatINR(metrics.monthIncome), href: "/income" },
-    { label: "Income this year", value: metrics && formatINR(metrics.yearIncome), href: "/income" },
+    {
+      label: "Income this month",
+      value:
+        metrics &&
+        (metrics.monthIncome >= 0
+          ? `+${formatINR(metrics.monthIncome)}`
+          : formatINR(metrics.monthIncome)),
+      note: "Includes F&O trading P&L",
+      href: "/income",
+    },
+    {
+      label: "Income this year",
+      value:
+        metrics &&
+        (metrics.yearIncome >= 0
+          ? `+${formatINR(metrics.yearIncome)}`
+          : formatINR(metrics.yearIncome)),
+      href: "/income",
+    },
     {
       label: "Left this month (income − spent)",
-      value: metrics && formatINR(metrics.monthIncome - metrics.monthExpense),
+      value:
+        metrics &&
+        (metrics.monthIncome - metrics.monthExpense >= 0
+          ? `+${formatINR(metrics.monthIncome - metrics.monthExpense)}`
+          : formatINR(metrics.monthIncome - metrics.monthExpense)),
       href: "/monthly-trends",
     },
     {
@@ -140,7 +161,13 @@ export function DashboardView() {
             <Link href="/income">
               <Button variant="secondary">
                 <Plus className="h-4 w-4" aria-hidden />
-                Add income
+                Income
+              </Button>
+            </Link>
+            <Link href="/fno">
+              <Button variant="secondary">
+                <CandlestickChart className="h-4 w-4" aria-hidden />
+                F&O
               </Button>
             </Link>
             <Link href="/expenses">
@@ -168,7 +195,22 @@ export function DashboardView() {
               {loading && !metrics ? (
                 <Skeleton className="mt-2 h-6 w-24" />
               ) : c.value !== null ? (
-                <p className="num mt-1 text-lg font-bold text-slate-900 md:text-xl">{c.value}</p>
+                <>
+                  <p
+                    className={`num mt-1 text-lg font-bold md:text-xl ${
+                      c.value.startsWith("-")
+                        ? "text-rose-700"
+                        : c.value.startsWith("+")
+                        ? "text-emerald-700"
+                        : "text-slate-900"
+                    }`}
+                  >
+                    {c.value}
+                  </p>
+                  {c.note && (
+                    <p className="mt-0.5 text-[11px] text-slate-400">{c.note}</p>
+                  )}
+                </>
               ) : (
                 <p className="mt-1 text-sm text-slate-400">{c.note ?? "—"}</p>
               )}

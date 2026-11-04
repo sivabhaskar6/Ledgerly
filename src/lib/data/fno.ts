@@ -1,0 +1,346 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { FnoTradeWithRefs } from "@/types/db";
+import { toFnoRow, type FnoFormValues } from "@/lib/validations/fno";
+import { todayISO } from "@/lib/utils/dates";
+
+async function currentUserId(db: SupabaseClient) {
+  const {
+    data: { user },
+    error,
+  } = await db.auth.getUser();
+  if (error || !user) throw new Error("Your session has expired. Log in again.");
+  return user.id;
+}
+
+export type FnoSummary = {
+  trades: FnoTradeWithRefs[];
+  totalNetPnlPaise: number;
+  todayNetPnlPaise: number;
+  totalGrossPnlPaise: number;
+  totalChargesPaise: number;
+  totalTrades: number;
+  winTrades: number;
+  lossTrades: number;
+  winRatePct: number | null;
+  todayTradesCount: number;
+  tableMissing?: boolean;
+};
+
+export async function fetchFnoTrades(db: SupabaseClient): Promise<FnoSummary> {
+  let trades: FnoTradeWithRefs[] = [];
+  let tableMissing = false;
+
+  try {
+    const { data, error } = await db
+      .from("fno_trades")
+      .select("*, account:accounts(name)")
+      .order("occurred_on", { ascending: false })
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      if (/schema cache/i.test(error.message)) {
+        tableMissing = true;
+      } else {
+        throw error;
+      }
+    } else if (data) {
+      trades = data as unknown as FnoTradeWithRefs[];
+    }
+  } catch (err) {
+    if (err instanceof Error && /schema cache/i.test(err.message)) {
+      tableMissing = true;
+    } else {
+      throw err;
+    }
+  }
+
+  const today = todayISO();
+  let totalNetPnlPaise = 0;
+  let todayNetPnlPaise = 0;
+  let totalGrossPnlPaise = 0;
+  let totalChargesPaise = 0;
+  let winTrades = 0;
+  let lossTrades = 0;
+  let todayTradesCount = 0;
+
+  for (const t of trades) {
+    totalNetPnlPaise += t.net_pnl_paise;
+    totalGrossPnlPaise += t.gross_pnl_paise;
+    totalChargesPaise += t.charges_paise;
+
+    if (t.net_pnl_paise > 0) winTrades++;
+    else if (t.net_pnl_paise < 0) lossTrades++;
+
+    if (t.occurred_on === today) {
+      todayNetPnlPaise += t.net_pnl_paise;
+      todayTradesCount++;
+    }
+  }
+
+  const totalTrades = trades.length;
+  const winRatePct =
+    totalTrades > 0 ? Math.round((winTrades / totalTrades) * 1000) / 10 : null;
+
+  return {
+    trades,
+    totalNetPnlPaise,
+    todayNetPnlPaise,
+    totalGrossPnlPaise,
+    totalChargesPaise,
+    totalTrades,
+    winTrades,
+    lossTrades,
+    winRatePct,
+    todayTradesCount,
+    tableMissing,
+  };
+}
+
+export function makeFnoIncomeTitle(trade: {
+  symbol: string;
+  strike_price_paise?: number | null;
+  instrument_type: string;
+  net_pnl_paise: number;
+}) {
+  const isProfit = trade.net_pnl_paise >= 0;
+  const strikeLabel = trade.strike_price_paise
+    ? ` ${Math.floor(trade.strike_price_paise / 100)}`
+    : "";
+  const typeLabel =
+    trade.instrument_type === "call"
+      ? "CE"
+      : trade.instrument_type === "put"
+      ? "PE"
+      : "FUT";
+  return `F&O ${isProfit ? "Profit" : "Loss"}: ${trade.symbol.toUpperCase()}${strikeLabel} ${typeLabel}`;
+}
+
+async function syncTradeToIncome(
+  db: SupabaseClient,
+  userId: string,
+  row: ReturnType<typeof toFnoRow>,
+  existingIncomeId?: string | null
+): Promise<string | null> {
+  if (row.net_pnl_paise === 0) {
+    if (existingIncomeId) {
+      try {
+        await db.from("income").delete().eq("id", existingIncomeId);
+      } catch {
+        // ignore
+      }
+    }
+    return null;
+  }
+
+  const title = makeFnoIncomeTitle(row);
+  const isProfit = row.net_pnl_paise >= 0;
+  const note = row.note || `Realized F&O ${isProfit ? "profit" : "loss"}`;
+
+  if (existingIncomeId) {
+    try {
+      const payload: Record<string, unknown> = {
+        title,
+        amount_paise: row.net_pnl_paise,
+        occurred_on: row.occurred_on,
+        note,
+      };
+      if (row.account_id) payload.account_id = row.account_id;
+
+      const { error } = await db
+        .from("income")
+        .update(payload)
+        .eq("id", existingIncomeId);
+
+      if (!error) return existingIncomeId;
+
+      if (error && /account_id/i.test(error.message)) {
+        delete payload.account_id;
+        const { error: noAccErr } = await db
+          .from("income")
+          .update(payload)
+          .eq("id", existingIncomeId);
+        if (!noAccErr) return existingIncomeId;
+      }
+    } catch {
+      // Fall through to insert if update failed
+    }
+  }
+
+  const payload: Record<string, unknown> = {
+    user_id: userId,
+    title,
+    source: "fno_trading",
+    amount_paise: row.net_pnl_paise,
+    occurred_on: row.occurred_on,
+    note,
+  };
+  if (row.account_id) payload.account_id = row.account_id;
+
+  try {
+    let { data, error } = await db
+      .from("income")
+      .insert(payload)
+      .select("id")
+      .single();
+
+    if (error) {
+      // If fno_trading source is not yet in the DB constraint, fallback to stock_profit
+      if (/source/i.test(error.message)) {
+        payload.source = "stock_profit";
+        const fbRes = await db
+          .from("income")
+          .insert(payload)
+          .select("id")
+          .single();
+        data = fbRes.data;
+        error = fbRes.error;
+      }
+
+      // If account_id column is missing
+      if (error && /account_id/i.test(error.message)) {
+        delete payload.account_id;
+        const noAccRes = await db
+          .from("income")
+          .insert(payload)
+          .select("id")
+          .single();
+        data = noAccRes.data;
+        error = noAccRes.error;
+      }
+
+      if (error) return null;
+    }
+    return data?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function syncUnsyncedFnoTrades(db: SupabaseClient): Promise<number> {
+  try {
+    const { data: unsynced, error } = await db
+      .from("fno_trades")
+      .select("*")
+      .is("income_id", null);
+
+    if (error || !unsynced || unsynced.length === 0) return 0;
+
+    let synced = 0;
+    for (const t of unsynced) {
+      if (!t.net_pnl_paise || t.net_pnl_paise === 0) continue;
+      const title = makeFnoIncomeTitle(t);
+      const isProfit = t.net_pnl_paise >= 0;
+      const note = t.note || `Realized F&O ${isProfit ? "profit" : "loss"}`;
+
+      const payload: Record<string, unknown> = {
+        user_id: t.user_id,
+        title,
+        source: "fno_trading",
+        amount_paise: t.net_pnl_paise,
+        occurred_on: t.occurred_on,
+        note,
+      };
+      if (t.account_id) payload.account_id = t.account_id;
+
+      try {
+        let { data, error: insErr } = await db
+          .from("income")
+          .insert(payload)
+          .select("id")
+          .single();
+
+        if (insErr && /source/i.test(insErr.message)) {
+          payload.source = "stock_profit";
+          const res = await db.from("income").insert(payload).select("id").single();
+          data = res.data;
+          insErr = res.error;
+        }
+
+        if (insErr && /account_id/i.test(insErr.message)) {
+          delete payload.account_id;
+          const res = await db.from("income").insert(payload).select("id").single();
+          data = res.data;
+          insErr = res.error;
+        }
+
+        if (!insErr && data?.id) {
+          await db.from("fno_trades").update({ income_id: data.id }).eq("id", t.id);
+          synced++;
+        }
+      } catch {
+        // Continue
+      }
+    }
+    return synced;
+  } catch {
+    return 0;
+  }
+}
+
+export async function createFnoTrade(db: SupabaseClient, v: FnoFormValues) {
+  const user_id = await currentUserId(db);
+  const row = toFnoRow(v);
+
+  const income_id = await syncTradeToIncome(db, user_id, row);
+
+  const { error } = await db.from("fno_trades").insert({
+    ...row,
+    income_id,
+    user_id,
+  });
+  if (error) throw error;
+}
+
+export async function updateFnoTrade(
+  db: SupabaseClient,
+  id: string,
+  v: FnoFormValues
+) {
+  const row = toFnoRow(v);
+
+  const { data: existing } = await db
+    .from("fno_trades")
+    .select("income_id, user_id")
+    .eq("id", id)
+    .single();
+
+  const user_id = existing?.user_id || (await currentUserId(db));
+  const income_id = await syncTradeToIncome(
+    db,
+    user_id,
+    row,
+    existing?.income_id ?? null
+  );
+
+  const { data, error } = await db
+    .from("fno_trades")
+    .update({ ...row, income_id })
+    .eq("id", id)
+    .select("id");
+  if (error) throw error;
+  if (!data?.length) throw new Error("F&O trade not found.");
+}
+
+export async function deleteFnoTrade(db: SupabaseClient, id: string) {
+  const { data: trade } = await db
+    .from("fno_trades")
+    .select("income_id")
+    .eq("id", id)
+    .single();
+
+  const { data, error } = await db
+    .from("fno_trades")
+    .delete()
+    .eq("id", id)
+    .select("id");
+  if (error) throw error;
+  if (!data?.length) throw new Error("F&O trade not found.");
+
+  if (trade?.income_id) {
+    try {
+      await db.from("income").delete().eq("id", trade.income_id);
+    } catch {
+      // ignore
+    }
+  }
+}

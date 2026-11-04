@@ -68,8 +68,21 @@ export async function fetchMonthlyTrends(
       .gte("occurred_on", yStart)
       .lte("occurred_on", yEnd);
     if (!incErr && inc) yearIncome = inc as { occurred_on: string; amount_paise: number }[];
+
+    // Also include any unsynced F&O trades (where income_id is null)
+    const { data: unsyncedTrades } = await db
+      .from("fno_trades")
+      .select("occurred_on, net_pnl_paise")
+      .is("income_id", null)
+      .gte("occurred_on", yStart)
+      .lte("occurred_on", yEnd);
+    if (unsyncedTrades) {
+      for (const t of unsyncedTrades) {
+        yearIncome.push({ occurred_on: t.occurred_on, amount_paise: Number(t.net_pnl_paise || 0) });
+      }
+    }
   } catch {
-    // Continue if income table error
+    // Continue if table error
   }
 
   // 1. Daily trend for the selected month
