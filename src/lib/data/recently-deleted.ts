@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { permanentlyDeleteExpense, restoreExpense } from "@/lib/data/expenses";
 
-export type DeletedItemKind = "expense" | "income" | "fno";
+export type DeletedItemKind = "expense" | "income" | "fno" | "ipo";
 
 export type DeletedItem = {
   id: string;
@@ -14,6 +14,7 @@ export type DeletedItem = {
   subtext?: string;
   account_name?: string | null;
   linkedTradeId?: string | null;
+  linkedIpoId?: string | null;
   linkedIncomeId?: string | null;
 };
 
@@ -132,19 +133,65 @@ export async function fetchRecentlyDeleted(db: SupabaseClient): Promise<DeletedI
     // deleted_at column or fno_trades table might not exist yet
   }
 
-  // 4. Add remaining deleted income rows (those not already represented by F&O trades)
+  // 4. Fetch soft-deleted IPO gains
+  try {
+    const { data: ipos, error: ipoErr } = await db
+      .from("ipo_gains")
+      .select("id, symbol, name, quantity, issue_price_paise, sold_price_paise, net_pnl_paise, occurred_on, deleted_at, note, income_id, account:accounts(name)")
+      .not("deleted_at", "is", null)
+      .order("deleted_at", { ascending: false });
+
+    if (!ipoErr && ipos) {
+      for (const t of ipos) {
+        const acc = t.account as unknown as { name?: string } | null;
+        const netPaise = Number(t.net_pnl_paise);
+        const isProfit = netPaise >= 0;
+
+        let incomeEntry: ReturnType<typeof deletedIncomeMap.get> | undefined;
+        if (t.income_id && deletedIncomeMap.has(t.income_id)) {
+          incomeEntry = deletedIncomeMap.get(t.income_id);
+          handledIncomeIds.add(t.income_id);
+        }
+
+        const deletedAt = t.deleted_at || incomeEntry?.deleted_at || new Date().toISOString();
+
+        items.push({
+          id: t.id,
+          kind: "ipo",
+          title: `IPO Listing ${isProfit ? "Gain" : "Loss"}: ${t.symbol.toUpperCase()}`,
+          amount_paise: netPaise,
+          occurred_on: t.occurred_on,
+          deleted_at: deletedAt,
+          badge: "IPO Listing",
+          subtext:
+            t.note ||
+            `${t.quantity} sh @ ₹${(t.sold_price_paise / 100).toFixed(2)} (Allotted @ ₹${(
+              t.issue_price_paise / 100
+            ).toFixed(2)})`,
+          account_name: acc?.name || incomeEntry?.account_name || null,
+          linkedIpoId: t.id,
+          linkedIncomeId: t.income_id || null,
+        });
+      }
+    }
+  } catch {
+    // ipo_gains table might not exist yet
+  }
+
+  // 5. Add remaining deleted income rows (those not already represented by F&O or IPO)
   for (const [incId, inc] of deletedIncomeMap.entries()) {
     if (handledIncomeIds.has(incId)) continue;
 
     const isFno = inc.source === "fno_trading";
+    const isIpo = inc.source === "ipo_gain";
     items.push({
       id: inc.id,
-      kind: isFno ? "fno" : "income",
+      kind: isFno ? "fno" : isIpo ? "ipo" : "income",
       title: inc.title,
       amount_paise: inc.amount_paise,
       occurred_on: inc.occurred_on,
       deleted_at: inc.deleted_at,
-      badge: isFno ? "F&O Trade" : formatIncomeSourceBadge(inc.source),
+      badge: isFno ? "F&O Trade" : isIpo ? "IPO Listing" : formatIncomeSourceBadge(inc.source),
       subtext: inc.note || undefined,
       account_name: inc.account_name,
       linkedIncomeId: inc.id,
@@ -198,7 +245,7 @@ export async function restoreRecentlyDeleted(db: SupabaseClient, item: DeletedIt
       }
     }
 
-    // 2. Restore linked income entry (or search by income_id / trade link)
+    // 2. Restore linked income entry
     if (incomeId) {
       try {
         await db
@@ -215,6 +262,49 @@ export async function restoreRecentlyDeleted(db: SupabaseClient, item: DeletedIt
           .from("income")
           .update({ deleted_at: null })
           .eq("id", tradeId)
+          .not("deleted_at", "is", null);
+      } catch {
+        // ignore
+      }
+    }
+    return;
+  }
+
+  // If item is IPO or linked to IPO
+  if (item.kind === "ipo") {
+    const ipoId = item.linkedIpoId || (item.id.startsWith("ipo_") ? item.id.slice(4) : item.id);
+    const incomeId = item.linkedIncomeId;
+
+    // 1. Restore IPO gain
+    if (ipoId) {
+      try {
+        await db
+          .from("ipo_gains")
+          .update({ deleted_at: null })
+          .eq("id", ipoId)
+          .not("deleted_at", "is", null);
+      } catch {
+        // ignore
+      }
+    }
+
+    // 2. Restore linked income entry
+    if (incomeId) {
+      try {
+        await db
+          .from("income")
+          .update({ deleted_at: null })
+          .eq("id", incomeId)
+          .not("deleted_at", "is", null);
+      } catch {
+        // ignore
+      }
+    } else if (ipoId) {
+      try {
+        await db
+          .from("income")
+          .update({ deleted_at: null })
+          .eq("id", ipoId)
           .not("deleted_at", "is", null);
       } catch {
         // ignore
@@ -264,6 +354,37 @@ export async function permanentlyDeleteRecentlyDeleted(db: SupabaseClient, item:
     } else if (tradeId) {
       try {
         await db.from("income").delete().eq("id", tradeId);
+      } catch {
+        // ignore
+      }
+    }
+    return;
+  }
+
+  // If item is IPO or linked to IPO
+  if (item.kind === "ipo") {
+    const ipoId = item.linkedIpoId || (item.id.startsWith("ipo_") ? item.id.slice(4) : item.id);
+    const incomeId = item.linkedIncomeId;
+
+    // Delete IPO gain
+    if (ipoId) {
+      try {
+        await db.from("ipo_gains").delete().eq("id", ipoId);
+      } catch {
+        // ignore
+      }
+    }
+
+    // Delete income entry
+    if (incomeId) {
+      try {
+        await db.from("income").delete().eq("id", incomeId);
+      } catch {
+        // ignore
+      }
+    } else if (ipoId) {
+      try {
+        await db.from("income").delete().eq("id", ipoId);
       } catch {
         // ignore
       }

@@ -113,12 +113,31 @@ describe("Recently Deleted, Soft Delete, and Cross-table F&O Deletion", () => {
     let deletedItems = [
       { id: "tx-1", title: "Dinner", kind: "expense" },
       { id: "inc-1", title: "F&O Trade NIFTY", kind: "fno" },
+      { id: "ipo-1", title: "IPO Listing Gain: TATATECH", kind: "ipo" },
     ];
 
-    // Permanently delete inc-1
-    deletedItems = deletedItems.filter((i) => i.id !== "inc-1");
+    // Permanently delete ipo-1
+    deletedItems = deletedItems.filter((i) => i.id !== "ipo-1");
 
-    expect(deletedItems.length).toBe(1);
-    expect(deletedItems.find((i) => i.id === "inc-1")).toBeUndefined();
+    expect(deletedItems.length).toBe(2);
+    expect(deletedItems.find((i) => i.id === "ipo-1")).toBeUndefined();
+  });
+
+  it("handles soft-delete and restore for IPO listing gains consistently", () => {
+    const activeIpo = {
+      id: "ipo-active",
+      symbol: "TATATECH",
+      net_pnl_paise: 35000000, // +₹3,50,000
+      deleted_at: null as string | null,
+    };
+
+    // Soft-delete
+    const deletedIpo = { ...activeIpo, deleted_at: new Date().toISOString() };
+    expect(deletedIpo.deleted_at).not.toBeNull();
+
+    // Restore
+    const restoredIpo = { ...deletedIpo, deleted_at: null };
+    expect(restoredIpo.deleted_at).toBeNull();
+    expect(restoredIpo.net_pnl_paise).toBe(35000000);
   });
 });

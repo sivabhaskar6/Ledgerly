@@ -9,6 +9,7 @@ import {
   TrendingUp,
   TrendingDown,
   CandlestickChart,
+  Rocket,
 } from "lucide-react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -107,7 +108,7 @@ export function IncomeView() {
   const pages = Math.max(1, Math.ceil(count / INCOME_PAGE_SIZE));
   const cards = [
     { label: "Earned today", val: sum?.today, hint: "Today's net earnings" },
-    { label: "Earned this month", val: sum?.month, hint: "Includes realized F&O P&L" },
+    { label: "Earned this month", val: sum?.month, hint: "Includes realized F&O & IPO listing gains" },
     { label: "Earned this year", val: sum?.year, hint: "Year-to-date total" },
   ] as const;
 
@@ -115,13 +116,19 @@ export function IncomeView() {
     <>
       <PageHeader
         title="Income"
-        description="Profit and money earned (including realized F&O trading gains & loss deductions). Original capital is tracked separately under Capital."
+        description="Profit and money earned (including realized F&O trading gains/losses and IPO listing gains). Original capital is tracked separately under Capital."
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Link href="/fno">
               <Button variant="secondary">
                 <CandlestickChart className="h-4 w-4" aria-hidden />
                 F&O Journal
+              </Button>
+            </Link>
+            <Link href="/ipo">
+              <Button variant="secondary">
+                <Rocket className="h-4 w-4" aria-hidden />
+                IPO Gains
               </Button>
             </Link>
             <Button onClick={() => setEditing("new")}>
@@ -198,6 +205,7 @@ export function IncomeView() {
             {rows.map((r) => {
               const isProfit = r.amount_paise >= 0;
               const isFno = r.source === "fno_trading";
+              const isIpo = r.source === "ipo_gain";
 
               return (
                 <li
@@ -210,6 +218,11 @@ export function IncomeView() {
                       {isFno && (
                         <span className="inline-flex shrink-0 items-center rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-700">
                           F&O Trade
+                        </span>
+                      )}
+                      {isIpo && (
+                        <span className="inline-flex shrink-0 items-center rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                          IPO Listing
                         </span>
                       )}
                     </div>
@@ -300,7 +313,9 @@ export function IncomeView() {
                   : formatINR(deleting.amount_paise)
               }) will be moved to Recently deleted.${
                 deleting.source === "fno_trading"
-                  ? " This will also remove the trade from your F&O Journal and recalculate this month's income."
+                  ? " This will also move the trade from your F&O Journal and recalculate this month's income."
+                  : deleting.source === "ipo_gain"
+                  ? " This will also move the entry from your IPO Listing Gains section and recalculate this month's income."
                   : " You can restore it anytime."
               }`
             : ""

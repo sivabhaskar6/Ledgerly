@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState, useMemo } from "react";
-import { RotateCcw, Trash2, CandlestickChart, IndianRupee, Receipt } from "lucide-react";
+import { RotateCcw, Trash2, CandlestickChart, IndianRupee, Receipt, Rocket } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { errorMessage } from "@/lib/data/expenses";
 import {
@@ -18,7 +18,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ListSkeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/Toast";
 
-type FilterTab = "all" | "expense" | "income" | "fno";
+type FilterTab = "all" | "expense" | "income" | "fno" | "ipo";
 
 export function RecentlyDeletedView() {
   const { notify } = useToast();
@@ -81,12 +81,14 @@ export function RecentlyDeletedView() {
     let expense = 0;
     let income = 0;
     let fno = 0;
+    let ipo = 0;
     for (const i of items) {
       if (i.kind === "expense") expense++;
       else if (i.kind === "income") income++;
       else if (i.kind === "fno") fno++;
+      else if (i.kind === "ipo") ipo++;
     }
-    return { all: items.length, expense, income, fno };
+    return { all: items.length, expense, income, fno, ipo };
   }, [items]);
 
   const filteredItems = useMemo(() => {
@@ -98,7 +100,7 @@ export function RecentlyDeletedView() {
     <>
       <PageHeader
         title="Recently deleted"
-        description="Deleted expenses, income entries, and F&O trades stay here until removed permanently. They do not count toward any totals."
+        description="Deleted expenses, income entries, F&O trades, and IPO listing gains stay here until removed permanently. They do not count toward any totals."
       />
 
       {/* Filter Tabs */}
@@ -181,6 +183,26 @@ export function RecentlyDeletedView() {
             {counts.fno}
           </span>
         </button>
+
+        <button
+          type="button"
+          onClick={() => setTab("ipo")}
+          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+            tab === "ipo"
+              ? "bg-blue-700 text-white shadow-sm"
+              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+          }`}
+        >
+          <Rocket className="h-3.5 w-3.5" />
+          IPO Gains
+          <span
+            className={`rounded-full px-1.5 py-0.2 text-[10px] ${
+              tab === "ipo" ? "bg-blue-800 text-blue-100" : "bg-white text-slate-600"
+            }`}
+          >
+            {counts.ipo}
+          </span>
+        </button>
       </div>
 
       {error && (
@@ -204,6 +226,8 @@ export function RecentlyDeletedView() {
               ? "Nothing in Recently deleted"
               : tab === "fno"
               ? "No deleted F&O trades"
+              : tab === "ipo"
+              ? "No deleted IPO listing gains"
               : tab === "income"
               ? "No deleted income entries"
               : "No deleted expenses"
@@ -219,6 +243,8 @@ export function RecentlyDeletedView() {
             let badgeClass = "border-slate-200 bg-slate-100 text-slate-700";
             if (item.kind === "fno") {
               badgeClass = "border-violet-200 bg-violet-50 text-violet-800";
+            } else if (item.kind === "ipo") {
+              badgeClass = "border-blue-200 bg-blue-50 text-blue-800";
             } else if (item.kind === "income") {
               badgeClass = "border-emerald-200 bg-emerald-50 text-emerald-800";
             }

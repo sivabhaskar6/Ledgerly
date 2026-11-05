@@ -123,3 +123,27 @@ export type FnoTradeWithRefs = FnoTrade & {
   account: { name: string } | null;
 };
 
+export type IpoGain = {
+  id: string;
+  account_id: string | null;
+  income_id: string | null;
+  symbol: string;
+  name: string | null;
+  quantity: number;
+  issue_price_paise: number;
+  sold_price_paise: number;
+  charges_paise: number;
+  gross_pnl_paise: number;
+  net_pnl_paise: number;
+  occurred_on: string;
+  note: string | null;
+  deleted_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type IpoGainWithRefs = IpoGain & {
+  account: { name: string } | null;
+};
+
+

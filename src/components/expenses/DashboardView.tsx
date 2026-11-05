@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { Plus, Landmark, CandlestickChart } from "lucide-react";
+import { Plus, Landmark, CandlestickChart, Rocket } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { DEFAULT_FILTERS, errorMessage, fetchExpenses, fetchSummary } from "@/lib/data/expenses";
 import { fetchIncomeSummary } from "@/lib/data/income";
@@ -104,7 +104,7 @@ export function DashboardView() {
         (metrics.monthIncome >= 0
           ? `+${formatINR(metrics.monthIncome)}`
           : formatINR(metrics.monthIncome)),
-      note: "Includes F&O trading P&L",
+      note: "Includes F&O & IPO listing gains",
       href: "/income",
     },
     {
@@ -168,6 +168,12 @@ export function DashboardView() {
               <Button variant="secondary">
                 <CandlestickChart className="h-4 w-4" aria-hidden />
                 F&O
+              </Button>
+            </Link>
+            <Link href="/ipo">
+              <Button variant="secondary">
+                <Rocket className="h-4 w-4" aria-hidden />
+                IPO
               </Button>
             </Link>
             <Link href="/expenses">

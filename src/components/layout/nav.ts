@@ -1,4 +1,4 @@
-import { LayoutDashboard, Receipt, Tags, TrendingUp, Trash2, Landmark, LineChart, CandlestickChart, FileBarChart, Settings, PiggyBank, Coins, type LucideIcon } from "lucide-react";
+import { LayoutDashboard, Receipt, Tags, TrendingUp, Trash2, Landmark, LineChart, CandlestickChart, Rocket, FileBarChart, Settings, PiggyBank, Coins, type LucideIcon } from "lucide-react";
 
 export type NavItem = { href: string; label: string; icon: LucideIcon; primaryOnMobile?: boolean };
 export const NAV: NavItem[] = [
@@ -12,6 +12,7 @@ export const NAV: NavItem[] = [
   { href: "/capital", label: "Capital", icon: Coins },
   { href: "/investments", label: "Investments", icon: LineChart },
   { href: "/fno", label: "F&O Trading", icon: CandlestickChart },
+  { href: "/ipo", label: "IPO Listing Gains", icon: Rocket },
   { href: "/reports", label: "Reports", icon: FileBarChart },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
