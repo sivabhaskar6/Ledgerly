@@ -26,6 +26,7 @@ create table if not exists public.fno_trades (
   net_pnl_paise bigint not null,
   occurred_on date not null,
   note text check (note is null or length(note) <= 500),
+  deleted_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

@@ -68,22 +68,38 @@ export async function fetchFullReport(db: SupabaseClient, filter: ReportFilter):
   if (expErr) throw expErr;
 
   // Query income (excluding transfers or capital movements)
-  let incQuery = db.from("income").select("amount_paise, occurred_on");
+  let incQuery = db.from("income").select("amount_paise, occurred_on").is("deleted_at", null);
   if (filter.from) incQuery = incQuery.gte("occurred_on", filter.from);
   if (filter.to) incQuery = incQuery.lte("occurred_on", filter.to);
 
   let totalIncomePaise = 0;
   try {
-    const { data: incomeData, error: incErr } = await incQuery;
+    let { data: incomeData, error: incErr } = await incQuery;
+    if (incErr && /deleted_at/i.test(incErr.message)) {
+      let fbQuery = db.from("income").select("amount_paise, occurred_on");
+      if (filter.from) fbQuery = fbQuery.gte("occurred_on", filter.from);
+      if (filter.to) fbQuery = fbQuery.lte("occurred_on", filter.to);
+      const fb = await fbQuery;
+      incomeData = fb.data;
+      incErr = fb.error;
+    }
     if (!incErr && incomeData) {
       totalIncomePaise = incomeData.reduce((sum, r) => sum + Number(r.amount_paise), 0);
     }
 
-    // Also include any unsynced F&O trades (where income_id is null)
-    let fnoQuery = db.from("fno_trades").select("net_pnl_paise, occurred_on").is("income_id", null);
+    // Also include any unsynced non-deleted F&O trades (where income_id is null)
+    let fnoQuery = db.from("fno_trades").select("net_pnl_paise, occurred_on").is("income_id", null).is("deleted_at", null);
     if (filter.from) fnoQuery = fnoQuery.gte("occurred_on", filter.from);
     if (filter.to) fnoQuery = fnoQuery.lte("occurred_on", filter.to);
-    const { data: unsyncedTrades } = await fnoQuery;
+    const fnoRes = await fnoQuery;
+    let unsyncedTrades = fnoRes.data;
+    if (fnoRes.error && /deleted_at/i.test(fnoRes.error.message)) {
+      let fbFno = db.from("fno_trades").select("net_pnl_paise, occurred_on").is("income_id", null);
+      if (filter.from) fbFno = fbFno.gte("occurred_on", filter.from);
+      if (filter.to) fbFno = fbFno.lte("occurred_on", filter.to);
+      const fb = await fbFno;
+      unsyncedTrades = fb.data;
+    }
     if (unsyncedTrades) {
       totalIncomePaise += unsyncedTrades.reduce((sum, r) => sum + Number(r.net_pnl_paise || 0), 0);
     }

@@ -114,6 +114,7 @@ export type FnoTrade = {
   net_pnl_paise: number;
   occurred_on: string;
   note: string | null;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 };

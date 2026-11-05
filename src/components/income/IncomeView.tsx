@@ -94,7 +94,7 @@ export function IncomeView() {
     setBusy(true);
     try {
       await deleteIncome(createClient(), deleting.id);
-      notify("success", "Income entry removed.");
+      notify("success", "Income entry moved to Recently deleted.");
       setDeleting(null);
       await load();
     } catch (e) {
@@ -289,16 +289,20 @@ export function IncomeView() {
 
       <ConfirmDialog
         open={!!deleting}
-        title="Delete this income entry?"
+        title="Move to Recently deleted?"
         busy={busy}
-        confirmLabel="Delete entry"
+        confirmLabel="Move to trash"
         body={
           deleting
             ? `"${deleting.title}" (${
                 deleting.amount_paise >= 0
                   ? `+${formatINR(deleting.amount_paise)}`
                   : formatINR(deleting.amount_paise)
-              }) will be permanently removed from your income totals.`
+              }) will be moved to Recently deleted.${
+                deleting.source === "fno_trading"
+                  ? " This will also remove the trade from your F&O Journal and recalculate this month's income."
+                  : " You can restore it anytime."
+              }`
             : ""
         }
         onConfirm={confirmDelete}

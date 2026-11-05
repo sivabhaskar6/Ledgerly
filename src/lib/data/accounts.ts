@@ -38,10 +38,19 @@ export async function fetchAccountsWithBalances(db: SupabaseClient): Promise<{
   // Fetch income with account_id if available
   let incomeRows: { account_id: string; amount_paise: number }[] = [];
   try {
-    const { data: inc, error: incErr } = await db
+    let { data: inc, error: incErr } = await db
       .from("income")
       .select("account_id, amount_paise")
+      .is("deleted_at", null)
       .not("account_id", "is", null);
+    if (incErr && /deleted_at/i.test(incErr.message)) {
+      const fb = await db
+        .from("income")
+        .select("account_id, amount_paise")
+        .not("account_id", "is", null);
+      inc = fb.data;
+      incErr = fb.error;
+    }
     if (!incErr && inc) {
       incomeRows = inc as { account_id: string; amount_paise: number }[];
     }

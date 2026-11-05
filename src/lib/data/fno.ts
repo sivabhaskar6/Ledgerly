@@ -31,11 +31,22 @@ export async function fetchFnoTrades(db: SupabaseClient): Promise<FnoSummary> {
   let tableMissing = false;
 
   try {
-    const { data, error } = await db
+    let { data, error } = await db
       .from("fno_trades")
       .select("*, account:accounts(name)")
+      .is("deleted_at", null)
       .order("occurred_on", { ascending: false })
       .order("created_at", { ascending: false });
+
+    if (error && /deleted_at/i.test(error.message)) {
+      const fb = await db
+        .from("fno_trades")
+        .select("*, account:accounts(name)")
+        .order("occurred_on", { ascending: false })
+        .order("created_at", { ascending: false });
+      data = fb.data;
+      error = fb.error;
+    }
 
     if (error) {
       if (/schema cache/i.test(error.message)) {
@@ -218,10 +229,20 @@ async function syncTradeToIncome(
 
 export async function syncUnsyncedFnoTrades(db: SupabaseClient): Promise<number> {
   try {
-    const { data: unsynced, error } = await db
+    let { data: unsynced, error } = await db
       .from("fno_trades")
       .select("*")
-      .is("income_id", null);
+      .is("income_id", null)
+      .is("deleted_at", null);
+
+    if (error && /deleted_at/i.test(error.message)) {
+      const fb = await db
+        .from("fno_trades")
+        .select("*")
+        .is("income_id", null);
+      unsynced = fb.data;
+      error = fb.error;
+    }
 
     if (error || !unsynced || unsynced.length === 0) return 0;
 
@@ -328,13 +349,102 @@ export async function deleteFnoTrade(db: SupabaseClient, id: string) {
     .eq("id", id)
     .single();
 
-  const { data, error } = await db
+  const now = new Date().toISOString();
+
+  // 1. Soft-delete in fno_trades (or fallback to hard delete if deleted_at column is missing)
+  let softDeleted = false;
+  try {
+    const { error } = await db
+      .from("fno_trades")
+      .update({ deleted_at: now })
+      .eq("id", id)
+      .is("deleted_at", null);
+
+    if (!error) {
+      softDeleted = true;
+    } else if (!/deleted_at/i.test(error.message)) {
+      throw error;
+    }
+  } catch (err) {
+    if (err instanceof Error && !/deleted_at/i.test(err.message)) throw err;
+  }
+
+  if (!softDeleted) {
+    const { data: hardData, error: hardErr } = await db
+      .from("fno_trades")
+      .delete()
+      .eq("id", id)
+      .select("id");
+    if (hardErr) throw hardErr;
+    if (!hardData?.length) throw new Error("F&O trade not found or already deleted.");
+  }
+
+  // 2. Also soft-delete (or hard delete) the corresponding income entry
+  if (trade?.income_id) {
+    if (softDeleted) {
+      try {
+        const { error: incErr } = await db
+          .from("income")
+          .update({ deleted_at: now })
+          .eq("id", trade.income_id)
+          .is("deleted_at", null);
+
+        if (incErr && /deleted_at/i.test(incErr.message)) {
+          await db.from("income").delete().eq("id", trade.income_id);
+        }
+      } catch {
+        try {
+          await db.from("income").delete().eq("id", trade.income_id);
+        } catch {
+          // ignore
+        }
+      }
+    } else {
+      try {
+        await db.from("income").delete().eq("id", trade.income_id);
+      } catch {
+        // ignore
+      }
+    }
+  }
+}
+
+export async function restoreFnoTrade(db: SupabaseClient, id: string) {
+  const { data: trade } = await db
     .from("fno_trades")
-    .delete()
+    .select("income_id")
     .eq("id", id)
-    .select("id");
+    .single();
+
+  const { error } = await db
+    .from("fno_trades")
+    .update({ deleted_at: null })
+    .eq("id", id)
+    .not("deleted_at", "is", null);
   if (error) throw error;
-  if (!data?.length) throw new Error("F&O trade not found.");
+
+  if (trade?.income_id) {
+    try {
+      await db
+        .from("income")
+        .update({ deleted_at: null })
+        .eq("id", trade.income_id)
+        .not("deleted_at", "is", null);
+    } catch {
+      // ignore
+    }
+  }
+}
+
+export async function permanentlyDeleteFnoTrade(db: SupabaseClient, id: string) {
+  const { data: trade } = await db
+    .from("fno_trades")
+    .select("income_id")
+    .eq("id", id)
+    .single();
+
+  const { error } = await db.from("fno_trades").delete().eq("id", id);
+  if (error) throw error;
 
   if (trade?.income_id) {
     try {

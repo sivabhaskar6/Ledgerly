@@ -62,20 +62,44 @@ export async function fetchMonthlyTrends(
   // Fetch year's income
   let yearIncome: { occurred_on: string; amount_paise: number }[] = [];
   try {
-    const { data: inc, error: incErr } = await db
+    let { data: inc, error: incErr } = await db
       .from("income")
       .select("occurred_on, amount_paise")
+      .is("deleted_at", null)
       .gte("occurred_on", yStart)
       .lte("occurred_on", yEnd);
+
+    if (incErr && /deleted_at/i.test(incErr.message)) {
+      const fb = await db
+        .from("income")
+        .select("occurred_on, amount_paise")
+        .gte("occurred_on", yStart)
+        .lte("occurred_on", yEnd);
+      inc = fb.data;
+      incErr = fb.error;
+    }
     if (!incErr && inc) yearIncome = inc as { occurred_on: string; amount_paise: number }[];
 
-    // Also include any unsynced F&O trades (where income_id is null)
-    const { data: unsyncedTrades } = await db
+    // Also include any unsynced F&O trades (where income_id is null and not deleted)
+    const fnoQuery = db
       .from("fno_trades")
       .select("occurred_on, net_pnl_paise")
       .is("income_id", null)
+      .is("deleted_at", null)
       .gte("occurred_on", yStart)
       .lte("occurred_on", yEnd);
+
+    const fnoRes = await fnoQuery;
+    let unsyncedTrades = fnoRes.data;
+    if (fnoRes.error && /deleted_at/i.test(fnoRes.error.message)) {
+      const fb = await db
+        .from("fno_trades")
+        .select("occurred_on, net_pnl_paise")
+        .is("income_id", null)
+        .gte("occurred_on", yStart)
+        .lte("occurred_on", yEnd);
+      unsyncedTrades = fb.data;
+    }
     if (unsyncedTrades) {
       for (const t of unsyncedTrades) {
         yearIncome.push({ occurred_on: t.occurred_on, amount_paise: Number(t.net_pnl_paise || 0) });

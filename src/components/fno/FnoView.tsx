@@ -80,7 +80,7 @@ export function FnoView() {
     try {
       const db = createClient();
       await deleteFnoTrade(db, deleteTarget.id);
-      notify("success", "F&O trade deleted.");
+      notify("success", "F&O trade moved to Recently deleted.");
       setDeleteTarget(null);
       await load();
     } catch (e) {
@@ -539,7 +539,7 @@ export function FnoView() {
 
       <ConfirmDialog
         open={!!deleteTarget}
-        title="Delete F&O trade?"
+        title="Move F&O trade to Recently deleted?"
         body={
           deleteTarget
             ? `The trade record for ${deleteTarget.symbol} ${
@@ -548,10 +548,10 @@ export function FnoView() {
                   : deleteTarget.instrument_type.toUpperCase()
               } on ${displayDate(deleteTarget.occurred_on)} with P&L of ${formatINR(
                 deleteTarget.net_pnl_paise
-              )} will be permanently removed.`
+              )} will be moved to Recently deleted and deducted from your Income totals. You can restore it anytime.`
             : ""
         }
-        confirmLabel="Delete"
+        confirmLabel="Move to trash"
         onConfirm={() => void handleDelete()}
         onClose={() => setDeleteTarget(null)}
       />

@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { toIncomeRow, type IncomeFormValues } from "@/lib/validations/income";
 import { presetRange, todayISO } from "@/lib/utils/dates";
-import { makeFnoIncomeTitle, syncUnsyncedFnoTrades } from "@/lib/data/fno";
+import { deleteFnoTrade, makeFnoIncomeTitle, syncUnsyncedFnoTrades } from "@/lib/data/fno";
 
 export type Income = {
   id: string;
@@ -10,6 +10,7 @@ export type Income = {
   note: string | null;
   occurred_on: string;
   amount_paise: number;
+  deleted_at?: string | null;
   created_at: string;
 };
 
@@ -20,26 +21,65 @@ export async function fetchIncome(db: SupabaseClient, page: number) {
   await syncUnsyncedFnoTrades(db).catch(() => 0);
 
   const from = page * INCOME_PAGE_SIZE;
-  const { data, count, error } = await db
-    .from("income")
-    .select("*", { count: "exact" })
-    .order("occurred_on", { ascending: false })
-    .order("created_at", { ascending: false })
-    .range(from, from + INCOME_PAGE_SIZE - 1);
 
-  if (error) throw error;
+  let data: Income[] | null = null;
+  let count: number | null = null;
+  let queryError: { message: string } | null = null;
+
+  try {
+    const res = await db
+      .from("income")
+      .select("*", { count: "exact" })
+      .is("deleted_at", null)
+      .order("occurred_on", { ascending: false })
+      .order("created_at", { ascending: false })
+      .range(from, from + INCOME_PAGE_SIZE - 1);
+    data = (res.data as unknown as Income[]) ?? null;
+    count = res.count;
+    queryError = res.error;
+
+    if (queryError && /deleted_at/i.test(queryError.message)) {
+      // Fallback for pre-migration table without deleted_at column
+      const fb = await db
+        .from("income")
+        .select("*", { count: "exact" })
+        .order("occurred_on", { ascending: false })
+        .order("created_at", { ascending: false })
+        .range(from, from + INCOME_PAGE_SIZE - 1);
+      data = (fb.data as unknown as Income[]) ?? null;
+      count = fb.count;
+      queryError = fb.error;
+    }
+  } catch (err) {
+    if (err instanceof Error) queryError = err;
+  }
+
+  if (queryError) throw queryError;
 
   let rows = (data ?? []) as Income[];
   let totalCount = count ?? 0;
 
-  // 2. Fallback synthesis for any unsynced trades (e.g. if database check constraint is pending)
+  // 2. Fallback synthesis for any unsynced non-deleted trades (e.g. if database check constraint is pending)
   try {
-    const { data: unsyncedTrades } = await db
+    const query = db
       .from("fno_trades")
       .select("id, symbol, instrument_type, strike_price_paise, net_pnl_paise, occurred_on, note, created_at")
       .is("income_id", null)
+      .is("deleted_at", null)
       .neq("net_pnl_paise", 0)
       .order("occurred_on", { ascending: false });
+
+    const fnoRes = await query;
+    let unsyncedTrades = fnoRes.data;
+    if (fnoRes.error && /deleted_at/i.test(fnoRes.error.message)) {
+      const fb = await db
+        .from("fno_trades")
+        .select("id, symbol, instrument_type, strike_price_paise, net_pnl_paise, occurred_on, note, created_at")
+        .is("income_id", null)
+        .neq("net_pnl_paise", 0)
+        .order("occurred_on", { ascending: false });
+      unsyncedTrades = fb.data;
+    }
 
     if (unsyncedTrades && unsyncedTrades.length > 0) {
       const syntheticRows: Income[] = unsyncedTrades.map((t) => ({
@@ -101,7 +141,17 @@ export async function fetchIncomeSummary(db: SupabaseClient) {
       yearPaise = Number(r?.year_paise ?? 0);
     } else {
       // Direct sum fallback if RPC is unavailable
-      const { data: incRows } = await db.from("income").select("amount_paise, occurred_on");
+      const incRes = await db
+        .from("income")
+        .select("amount_paise, occurred_on")
+        .is("deleted_at", null);
+      let incRows = incRes.data;
+
+      if (incRes.error && /deleted_at/i.test(incRes.error.message)) {
+        const fb = await db.from("income").select("amount_paise, occurred_on");
+        incRows = fb.data;
+      }
+
       if (incRows) {
         for (const row of incRows) {
           const amt = Number(row.amount_paise || 0);
@@ -115,12 +165,22 @@ export async function fetchIncomeSummary(db: SupabaseClient) {
     // Continue
   }
 
-  // Factor in any remaining unsynced F&O trades (where income_id is null)
+  // Factor in any remaining unsynced non-deleted F&O trades (where income_id is null)
   try {
-    const { data: unsyncedTrades } = await db
+    const fnoRes = await db
       .from("fno_trades")
       .select("net_pnl_paise, occurred_on")
-      .is("income_id", null);
+      .is("income_id", null)
+      .is("deleted_at", null);
+    let unsyncedTrades = fnoRes.data;
+
+    if (fnoRes.error && /deleted_at/i.test(fnoRes.error.message)) {
+      const fb = await db
+        .from("fno_trades")
+        .select("net_pnl_paise, occurred_on")
+        .is("income_id", null);
+      unsyncedTrades = fb.data;
+    }
 
     if (unsyncedTrades) {
       for (const t of unsyncedTrades) {
@@ -160,21 +220,116 @@ export async function updateIncome(db: SupabaseClient, id: string, v: IncomeForm
 }
 
 export async function deleteIncome(db: SupabaseClient, id: string) {
+  // If it's a synthetic unsynced F&O entry
   if (id.startsWith("fno_")) {
     const tradeId = id.slice(4);
-    const { error } = await db.from("fno_trades").delete().eq("id", tradeId);
-    if (error) throw error;
+    await deleteFnoTrade(db, tradeId);
     return;
   }
 
-  // If this income entry was linked to an F&O trade, unlink it
+  const now = new Date().toISOString();
+
+  // Find if any fno_trades is linked to this income entry
+  let linkedTradeId: string | null = null;
   try {
-    await db.from("fno_trades").update({ income_id: null }).eq("income_id", id);
+    const { data: trade } = await db
+      .from("fno_trades")
+      .select("id")
+      .eq("income_id", id)
+      .maybeSingle();
+    if (trade?.id) linkedTradeId = trade.id;
+  } catch {
+    // Table might not exist
+  }
+
+  // 1. Soft-delete the income entry (or fallback to hard delete if column missing)
+  let softDeleted = false;
+  try {
+    const { error: incErr } = await db
+      .from("income")
+      .update({ deleted_at: now })
+      .eq("id", id)
+      .is("deleted_at", null);
+
+    if (!incErr) {
+      softDeleted = true;
+    } else if (!/deleted_at/i.test(incErr.message)) {
+      throw incErr;
+    }
+  } catch (err) {
+    if (err instanceof Error && !/deleted_at/i.test(err.message)) throw err;
+  }
+
+  if (!softDeleted) {
+    const { data: hardData, error: hardErr } = await db
+      .from("income")
+      .delete()
+      .eq("id", id)
+      .select("id");
+    if (hardErr) throw hardErr;
+    if (!hardData?.length) throw new Error("This income entry was already deleted.");
+  }
+
+  // 2. If it was added from F&O, STRICTLY delete/soft-delete from fno_trades too!
+  if (linkedTradeId) {
+    if (softDeleted) {
+      try {
+        const { error: tradeErr } = await db
+          .from("fno_trades")
+          .update({ deleted_at: now })
+          .eq("id", linkedTradeId)
+          .is("deleted_at", null);
+
+        if (tradeErr && /deleted_at/i.test(tradeErr.message)) {
+          await db.from("fno_trades").delete().eq("id", linkedTradeId);
+        }
+      } catch {
+        try {
+          await db.from("fno_trades").delete().eq("id", linkedTradeId);
+        } catch {
+          // ignore
+        }
+      }
+    } else {
+      try {
+        await db.from("fno_trades").delete().eq("id", linkedTradeId);
+      } catch {
+        // ignore
+      }
+    }
+  }
+}
+
+export async function restoreIncome(db: SupabaseClient, id: string) {
+  // 1. Restore income row
+  const { error } = await db
+    .from("income")
+    .update({ deleted_at: null })
+    .eq("id", id)
+    .not("deleted_at", "is", null);
+  if (error) throw error;
+
+  // 2. Also restore any linked F&O trade
+  try {
+    await db
+      .from("fno_trades")
+      .update({ deleted_at: null })
+      .eq("income_id", id)
+      .not("deleted_at", "is", null);
+  } catch {
+    // ignore
+  }
+}
+
+export async function permanentlyDeleteIncome(db: SupabaseClient, id: string) {
+  // 1. Delete linked F&O trade if any
+  try {
+    await db.from("fno_trades").delete().eq("income_id", id);
   } catch {
     // ignore
   }
 
-  const { data, error } = await db.from("income").delete().eq("id", id).select("id");
+  // 2. Delete income entry
+  const { error } = await db.from("income").delete().eq("id", id);
   if (error) throw error;
-  if (!data?.length) throw new Error("This income entry was already deleted.");
 }
