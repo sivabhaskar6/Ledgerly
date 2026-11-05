@@ -2,7 +2,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { toIncomeRow, type IncomeFormValues } from "@/lib/validations/income";
 import { presetRange, todayISO } from "@/lib/utils/dates";
 import { deleteFnoTrade, makeFnoIncomeTitle, syncUnsyncedFnoTrades } from "@/lib/data/fno";
-import { deleteIpoGain, makeIpoIncomeTitle, syncUnsyncedIpoGains } from "@/lib/data/ipo";
+import {
+  deleteIpoGain,
+  makeIpoIncomeTitle,
+  syncUnsyncedIpoGains,
+  isIpoIncome,
+  parseIpoFromIncome,
+} from "@/lib/data/ipo";
 
 export type Income = {
   id: string;
@@ -291,20 +297,130 @@ export async function createIncome(db: SupabaseClient, v: IncomeFormValues) {
 
   const row = toIncomeRow(v);
 
-  const { error } = await db.from("income").insert({ ...row, user_id: user.id });
+  const { data: inserted, error } = await db
+    .from("income")
+    .insert({ ...row, user_id: user.id })
+    .select("id")
+    .single();
+
   if (error) throw error;
+
+  // If this income entry is an IPO listing gain, automatically sync to ipo_gains!
+  if (
+    inserted?.id &&
+    (v.source === "ipo_gain" || isIpoIncome({ source: v.source, title: v.title }))
+  ) {
+    try {
+      const parsed = parseIpoFromIncome(row.title, row.amount_paise, row.note);
+      const ipoPayload: Record<string, unknown> = {
+        user_id: user.id,
+        income_id: inserted.id,
+        symbol: parsed.symbol,
+        name: parsed.name,
+        quantity: parsed.quantity,
+        issue_price_paise: parsed.issuePricePaise,
+        sold_price_paise: parsed.soldPricePaise,
+        charges_paise: parsed.chargesPaise,
+        gross_pnl_paise: row.amount_paise + parsed.chargesPaise,
+        net_pnl_paise: row.amount_paise,
+        occurred_on: row.occurred_on,
+        note: row.note || "Created from Income",
+      };
+
+      await db.from("ipo_gains").insert(ipoPayload);
+    } catch {
+      // Table might not exist yet
+    }
+  }
 }
 
 export async function updateIncome(db: SupabaseClient, id: string, v: IncomeFormValues) {
   if (id.startsWith("fno_")) {
     throw new Error("This entry is managed by the F&O Trading Journal. Please edit it under F&O.");
   }
+
+  // If it's a synthetic unsynced IPO entry
   if (id.startsWith("ipo_")) {
-    throw new Error("This entry is managed by IPO Listing Gains. Please edit it under IPO Listing Gains.");
+    const ipoId = id.slice(4);
+    const { data: ipo } = await db
+      .from("ipo_gains")
+      .select("income_id")
+      .eq("id", ipoId)
+      .maybeSingle();
+    if (ipo?.income_id) {
+      id = ipo.income_id;
+    }
   }
-  const { data, error } = await db.from("income").update(toIncomeRow(v)).eq("id", id).select("id");
+
+  const row = toIncomeRow(v);
+
+  const { data, error } = await db
+    .from("income")
+    .update(row)
+    .eq("id", id)
+    .select("id, user_id");
+
   if (error) throw error;
   if (!data?.length) throw new Error("This income entry no longer exists.");
+
+  const userId = data[0]?.user_id;
+
+  // If this income entry is an IPO listing gain, automatically sync update to ipo_gains!
+  if (v.source === "ipo_gain" || isIpoIncome({ source: v.source, title: v.title })) {
+    try {
+      const parsed = parseIpoFromIncome(row.title, row.amount_paise, row.note);
+      const grossPaise = row.amount_paise + parsed.chargesPaise;
+
+      const { data: existingIpo } = await db
+        .from("ipo_gains")
+        .select("id")
+        .eq("income_id", id)
+        .maybeSingle();
+
+      if (existingIpo?.id) {
+        const payload: Record<string, unknown> = {
+          symbol: parsed.symbol,
+          name: parsed.name,
+          gross_pnl_paise: grossPaise,
+          net_pnl_paise: row.amount_paise,
+          occurred_on: row.occurred_on,
+          note: row.note || "Updated from Income",
+        };
+
+        await db
+          .from("ipo_gains")
+          .update(payload)
+          .eq("id", existingIpo.id);
+      } else if (userId) {
+        const ipoPayload: Record<string, unknown> = {
+          user_id: userId,
+          income_id: id,
+          symbol: parsed.symbol,
+          name: parsed.name,
+          quantity: parsed.quantity,
+          issue_price_paise: parsed.issuePricePaise,
+          sold_price_paise: parsed.soldPricePaise,
+          charges_paise: parsed.chargesPaise,
+          gross_pnl_paise: grossPaise,
+          net_pnl_paise: row.amount_paise,
+          occurred_on: row.occurred_on,
+          note: row.note || "Created from Income",
+        };
+
+        await db.from("ipo_gains").insert(ipoPayload);
+      }
+    } catch {
+      // Table might not exist yet
+    }
+  } else {
+    // If source was changed away from ipo_gain, soft delete from ipo_gains
+    try {
+      const now = new Date().toISOString();
+      await db.from("ipo_gains").update({ deleted_at: now }).eq("income_id", id);
+    } catch {
+      // ignore
+    }
+  }
 }
 
 export async function deleteIncome(db: SupabaseClient, id: string) {

@@ -5,6 +5,7 @@ import {
   parseIncomeEntryType,
 } from "@/lib/validations/income";
 import { computeFnoPnl, toFnoRow } from "@/lib/validations/fno";
+import { isIpoIncome, parseIpoFromIncome } from "@/lib/data/ipo";
 
 describe("Income calculations, validations, and F&O P&L sync", () => {
   it("converts a regular profit entry to positive integer paise", () => {
@@ -118,5 +119,26 @@ describe("Income calculations, validations, and F&O P&L sync", () => {
     // Left this month: -7,000 - 15,000 = -22,000 (-2200000 paise)
     const leftThisMonthPaise = totalMonthIncomePaise - monthExpensesPaise;
     expect(leftThisMonthPaise).toBe(-2200000);
+  });
+
+  it("automatically prepares IPO listing data when an IPO entry is created in Income", () => {
+    const incomeEntry = {
+      title: "TATATECH IPO Listing Pop",
+      source: "ipo_gain",
+      amount_paise: 3500000, // +₹35,000
+      note: "50 shares allotted",
+    };
+
+    expect(isIpoIncome(incomeEntry)).toBe(true);
+
+    const ipoData = parseIpoFromIncome(
+      incomeEntry.title,
+      incomeEntry.amount_paise,
+      incomeEntry.note
+    );
+
+    expect(ipoData.symbol).toBe("TATATECH");
+    expect(ipoData.quantity).toBe(50);
+    expect(ipoData.soldPricePaise).toBe(70000); // 35000 / 50 = 700 / sh
   });
 });

@@ -27,7 +27,172 @@ export type IpoSummary = {
   tableMissing?: boolean;
 };
 
+export function isIpoIncome(inc: { source?: string | null; title?: string | null }): boolean {
+  if (inc.source === "ipo_gain") return true;
+  if (!inc.title) return false;
+  return /\bipo\b/i.test(inc.title);
+}
+
+export function parseIpoFromIncome(
+  title: string,
+  amountPaise: number,
+  note?: string | null
+): {
+  symbol: string;
+  name: string | null;
+  quantity: number;
+  issuePricePaise: number;
+  soldPricePaise: number;
+  chargesPaise: number;
+} {
+  const rawTitle = (title || "").trim();
+
+  // Strip prefix like "IPO Listing Gain: ", "IPO Listing Loss: ", "IPO Gain: ", "IPO: "
+  const cleaned = rawTitle.replace(/^IPO\s*(?:Listing)?\s*(?:Gain|Loss)?\s*:\s*/i, "").trim();
+
+  // Extract clean symbol candidate
+  let symbolCandidate = cleaned
+    .replace(/\b(IPO|Listing|Gain|Gains|Profit|Profits|Loss|Losses|Pop)\b/gi, "")
+    .trim()
+    .replace(/\s+/g, " ");
+
+  if (!symbolCandidate) {
+    symbolCandidate = cleaned || "IPO";
+  }
+
+  const symbol = symbolCandidate.toUpperCase().slice(0, 30);
+  const name = rawTitle.toUpperCase() !== symbol ? rawTitle : null;
+
+  let quantity = 1;
+  const chargesPaise = 0;
+  let issuePricePaise = 0;
+  let soldPricePaise = 0;
+
+  if (note) {
+    const qtyMatch = note.match(/(\d+)\s*(?:sh|shares|qty)/i);
+    if (qtyMatch && qtyMatch[1]) {
+      const q = parseInt(qtyMatch[1], 10);
+      if (q > 0) quantity = q;
+    }
+  }
+
+  if (amountPaise >= 0) {
+    issuePricePaise = 0;
+    soldPricePaise = Math.round(amountPaise / quantity);
+  } else {
+    issuePricePaise = Math.round(Math.abs(amountPaise) / quantity);
+    soldPricePaise = 0;
+  }
+
+  return {
+    symbol,
+    name,
+    quantity,
+    issuePricePaise,
+    soldPricePaise,
+    chargesPaise,
+  };
+}
+
+export async function syncIncomeToIpoGains(db: SupabaseClient): Promise<number> {
+  try {
+    // 1. Fetch active income entries that match source: 'ipo_gain' or title containing 'IPO'
+    let { data: ipoIncomes, error: incErr } = await db
+      .from("income")
+      .select("id, user_id, title, source, amount_paise, occurred_on, note, account_id, deleted_at")
+      .or("source.eq.ipo_gain,title.ilike.%IPO%")
+      .is("deleted_at", null);
+
+    if (incErr && /deleted_at/i.test(incErr.message)) {
+      const fb = await db
+        .from("income")
+        .select("id, user_id, title, source, amount_paise, occurred_on, note, account_id")
+        .or("source.eq.ipo_gain,title.ilike.%IPO%");
+      ipoIncomes = fb.data as typeof ipoIncomes;
+      incErr = fb.error;
+    }
+
+    if (incErr || !ipoIncomes || ipoIncomes.length === 0) return 0;
+
+    const candidates = ipoIncomes.filter((i) => isIpoIncome(i));
+    if (candidates.length === 0) return 0;
+
+    // 2. Fetch existing ipo_gains to find which income_ids are already tracked
+    const { data: existingGains, error: ipoErr } = await db
+      .from("ipo_gains")
+      .select("id, income_id");
+
+    if (ipoErr) {
+      // Table might not exist yet
+      return 0;
+    }
+
+    const trackedIncomeIds = new Set<string>();
+    if (existingGains) {
+      for (const g of existingGains) {
+        if (g.income_id) trackedIncomeIds.add(g.income_id);
+      }
+    }
+
+    let syncedCount = 0;
+
+    for (const inc of candidates) {
+      if (trackedIncomeIds.has(inc.id)) continue;
+
+      const parsed = parseIpoFromIncome(inc.title, Number(inc.amount_paise), inc.note);
+      const netPnlPaise = Number(inc.amount_paise);
+      const grossPnlPaise = netPnlPaise + parsed.chargesPaise;
+
+      const payload: Record<string, unknown> = {
+        user_id: inc.user_id,
+        income_id: inc.id,
+        symbol: parsed.symbol,
+        name: parsed.name,
+        quantity: parsed.quantity,
+        issue_price_paise: parsed.issuePricePaise,
+        sold_price_paise: parsed.soldPricePaise,
+        charges_paise: parsed.chargesPaise,
+        gross_pnl_paise: grossPnlPaise,
+        net_pnl_paise: netPnlPaise,
+        occurred_on: inc.occurred_on,
+        note: inc.note || "Synced from Income",
+      };
+      if (inc.account_id) payload.account_id = inc.account_id;
+
+      try {
+        const { error: insErr } = await db.from("ipo_gains").insert(payload);
+        if (!insErr) {
+          syncedCount++;
+          trackedIncomeIds.add(inc.id);
+          if (inc.source !== "ipo_gain") {
+            await db.from("income").update({ source: "ipo_gain" }).eq("id", inc.id);
+          }
+        } else if (/account_id/i.test(insErr.message)) {
+          delete payload.account_id;
+          const { error: noAccErr } = await db.from("ipo_gains").insert(payload);
+          if (!noAccErr) {
+            syncedCount++;
+            trackedIncomeIds.add(inc.id);
+            if (inc.source !== "ipo_gain") {
+              await db.from("income").update({ source: "ipo_gain" }).eq("id", inc.id);
+            }
+          }
+        }
+      } catch {
+        // Continue
+      }
+    }
+
+    return syncedCount;
+  } catch {
+    return 0;
+  }
+}
+
 export async function fetchIpoGains(db: SupabaseClient): Promise<IpoSummary> {
+  // 1. Sync any existing income entries that were added previously
+  await syncIncomeToIpoGains(db).catch(() => 0);
+
   let trades: IpoGainWithRefs[] = [];
   let tableMissing = false;
 
@@ -64,6 +229,75 @@ export async function fetchIpoGains(db: SupabaseClient): Promise<IpoSummary> {
     } else {
       throw err;
     }
+  }
+
+  // 2. Synthesize any remaining income entries with source 'ipo_gain'
+  // (e.g. if ipo_gains table is missing or pending schema refresh)
+  try {
+    const existingIncomeIds = new Set(
+      trades.map((t) => t.income_id).filter(Boolean) as string[]
+    );
+
+    const initialRes = await db
+      .from("income")
+      .select("id, user_id, title, source, amount_paise, occurred_on, note, account_id, created_at, account:accounts(name)")
+      .or("source.eq.ipo_gain,title.ilike.%IPO%")
+      .is("deleted_at", null)
+      .order("occurred_on", { ascending: false });
+
+    let ipoIncomes = initialRes.data;
+    if (initialRes.error && /deleted_at/i.test(initialRes.error.message)) {
+      const fb = await db
+        .from("income")
+        .select("id, user_id, title, source, amount_paise, occurred_on, note, account_id, created_at, account:accounts(name)")
+        .or("source.eq.ipo_gain,title.ilike.%IPO%")
+        .order("occurred_on", { ascending: false });
+      ipoIncomes = fb.data;
+    }
+
+    if (ipoIncomes && ipoIncomes.length > 0) {
+      const syntheticTrades: IpoGainWithRefs[] = [];
+      for (const inc of ipoIncomes) {
+        if (!isIpoIncome(inc)) continue;
+        if (existingIncomeIds.has(inc.id)) continue;
+
+        const parsed = parseIpoFromIncome(inc.title, Number(inc.amount_paise), inc.note);
+        const netPaise = Number(inc.amount_paise);
+        const grossPaise = netPaise + parsed.chargesPaise;
+        const acc = inc.account as unknown as { name?: string } | null;
+
+        syntheticTrades.push({
+          id: `inc_${inc.id}`,
+          account_id: inc.account_id || null,
+          income_id: inc.id,
+          symbol: parsed.symbol,
+          name: parsed.name,
+          quantity: parsed.quantity,
+          issue_price_paise: parsed.issuePricePaise,
+          sold_price_paise: parsed.soldPricePaise,
+          charges_paise: parsed.chargesPaise,
+          gross_pnl_paise: grossPaise,
+          net_pnl_paise: netPaise,
+          occurred_on: inc.occurred_on,
+          note: inc.note || "Imported from Income",
+          deleted_at: null,
+          created_at: inc.created_at,
+          updated_at: inc.created_at,
+          account: acc?.name ? { name: acc.name } : null,
+        });
+      }
+
+      if (syntheticTrades.length > 0) {
+        trades = [...trades, ...syntheticTrades].sort((a, b) => {
+          if (a.occurred_on !== b.occurred_on) {
+            return b.occurred_on.localeCompare(a.occurred_on);
+          }
+          return b.created_at.localeCompare(a.created_at);
+        });
+      }
+    }
+  } catch {
+    // Continue
   }
 
   const today = todayISO();
@@ -194,7 +428,6 @@ async function syncIpoToIncome(
       .single();
 
     if (error) {
-      // Fallback if ipo_gain source is rejected (though 'ipo_gain' is default in public.income)
       if (/source/i.test(error.message)) {
         payload.source = "stock_profit";
         const fbRes = await db
@@ -206,7 +439,6 @@ async function syncIpoToIncome(
         error = fbRes.error;
       }
 
-      // If account_id column is missing
       if (error && /account_id/i.test(error.message)) {
         delete payload.account_id;
         const noAccRes = await db
@@ -320,6 +552,24 @@ export async function updateIpoGain(
   id: string,
   v: IpoFormValues
 ) {
+  // If synthetic from income
+  if (id.startsWith("inc_")) {
+    const incId = id.slice(4);
+    const row = toIpoRow(v);
+    const user_id = await currentUserId(db);
+    await syncIpoToIncome(db, user_id, row, incId);
+    try {
+      await db.from("ipo_gains").insert({
+        ...row,
+        income_id: incId,
+        user_id,
+      });
+    } catch {
+      // ignore
+    }
+    return;
+  }
+
   const row = toIpoRow(v);
 
   const { data: existing } = await db
@@ -346,6 +596,21 @@ export async function updateIpoGain(
 }
 
 export async function deleteIpoGain(db: SupabaseClient, id: string) {
+  // If synthetic from income
+  if (id.startsWith("inc_")) {
+    const incId = id.slice(4);
+    const now = new Date().toISOString();
+    try {
+      const { error } = await db.from("income").update({ deleted_at: now }).eq("id", incId);
+      if (error && /deleted_at/i.test(error.message)) {
+        await db.from("income").delete().eq("id", incId);
+      }
+    } catch {
+      await db.from("income").delete().eq("id", incId);
+    }
+    return;
+  }
+
   const { data: gain } = await db
     .from("ipo_gains")
     .select("income_id")

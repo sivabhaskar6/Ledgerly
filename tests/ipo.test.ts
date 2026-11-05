@@ -5,7 +5,7 @@ import {
   ipoFormSchema,
   type IpoFormValues,
 } from "@/lib/validations/ipo";
-import { makeIpoIncomeTitle } from "@/lib/data/ipo";
+import { makeIpoIncomeTitle, isIpoIncome, parseIpoFromIncome } from "@/lib/data/ipo";
 import { rupeesToPaise } from "@/lib/utils/money";
 
 describe("IPO Listing Gain Calculations & Validations", () => {
@@ -133,5 +133,35 @@ describe("IPO Listing Gain Calculations & Validations", () => {
       net_pnl_paise: -1500000,
     });
     expect(lossTitle).toBe("IPO Listing Loss: PAYTM");
+  });
+
+  it("identifies IPO income entries accurately", () => {
+    expect(isIpoIncome({ source: "ipo_gain", title: "Dividend payout" })).toBe(true);
+    expect(isIpoIncome({ source: "stock_profit", title: "Tata Tech IPO" })).toBe(true);
+    expect(isIpoIncome({ source: "other", title: "IPO Listing Gain: SWIGGY" })).toBe(true);
+    expect(isIpoIncome({ source: "stock_profit", title: "Reliance Industries Sell" })).toBe(false);
+    expect(isIpoIncome({ source: "fno_trading", title: "NIFTY CE" })).toBe(false);
+  });
+
+  it("parses previously added income records into IPO listing data cleanly", () => {
+    // 1. Prefix title: "IPO Listing Gain: TATATECH"
+    const p1 = parseIpoFromIncome("IPO Listing Gain: TATATECH", 35000000);
+    expect(p1.symbol).toBe("TATATECH");
+    expect(p1.soldPricePaise).toBe(35000000);
+    expect(p1.quantity).toBe(1);
+
+    // 2. Casual title: "Tata Tech IPO" with note quantity
+    const p2 = parseIpoFromIncome("Tata Tech IPO", 1500000, "Allotted 50 shares retail");
+    expect(p2.symbol).toBe("TATA TECH");
+    expect(p2.name).toBe("Tata Tech IPO");
+    expect(p2.quantity).toBe(50);
+    // 15,000 / 50 = 300 / share
+    expect(p2.soldPricePaise).toBe(30000);
+
+    // 3. Loss entry: "IPO Listing Loss: PAYTM"
+    const p3 = parseIpoFromIncome("IPO Listing Loss: PAYTM", -1500000);
+    expect(p3.symbol).toBe("PAYTM");
+    expect(p3.issuePricePaise).toBe(1500000);
+    expect(p3.soldPricePaise).toBe(0);
   });
 });
