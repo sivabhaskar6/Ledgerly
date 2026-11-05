@@ -1,18 +1,34 @@
-import { LayoutDashboard, Receipt, Tags, TrendingUp, Trash2, Landmark, LineChart, CandlestickChart, Rocket, FileBarChart, Settings, PiggyBank, Coins, type LucideIcon } from "lucide-react";
+import {
+  LayoutDashboard,
+  Receipt,
+  PiggyBank,
+  Coins,
+  LineChart,
+  Rocket,
+  CandlestickChart,
+  Landmark,
+  Tags,
+  TrendingUp,
+  FileBarChart,
+  Trash2,
+  Settings,
+  type LucideIcon,
+} from "lucide-react";
 
 export type NavItem = { href: string; label: string; icon: LucideIcon; primaryOnMobile?: boolean };
+
 export const NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, primaryOnMobile: true },
   { href: "/expenses", label: "Expenses", icon: Receipt, primaryOnMobile: true },
   { href: "/income", label: "Income", icon: PiggyBank, primaryOnMobile: true },
-  { href: "/spending-categories", label: "Categories", icon: Tags, primaryOnMobile: true },
-  { href: "/monthly-trends", label: "Monthly trends", icon: TrendingUp },
-  { href: "/recently-deleted", label: "Recently deleted", icon: Trash2 },
-  { href: "/accounts", label: "Accounts", icon: Landmark },
-  { href: "/capital", label: "Capital", icon: Coins },
+  { href: "/capital", label: "Capital", icon: Coins, primaryOnMobile: true },
   { href: "/investments", label: "Investments", icon: LineChart },
-  { href: "/fno", label: "F&O Trading", icon: CandlestickChart },
   { href: "/ipo", label: "IPO Listing Gains", icon: Rocket },
+  { href: "/fno", label: "F&O Trading", icon: CandlestickChart },
+  { href: "/accounts", label: "Accounts", icon: Landmark },
+  { href: "/spending-categories", label: "Categories", icon: Tags },
+  { href: "/monthly-trends", label: "Monthly trends", icon: TrendingUp },
   { href: "/reports", label: "Reports", icon: FileBarChart },
+  { href: "/recently-deleted", label: "Recently deleted", icon: Trash2 },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
