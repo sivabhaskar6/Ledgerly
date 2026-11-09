@@ -1,12 +1,13 @@
 "use client";
 import Link from "next/link";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { loginSchema } from "@/lib/validations/auth";
 import { createClient } from "@/lib/supabase/client";
+import { checkUserApproval } from "@/lib/data/users";
 import { TextField } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { AuthHeading, FormError } from "@/components/layout/AuthShell";
@@ -19,11 +20,34 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<Values>({ resolver: zodResolver(loginSchema) });
 
+  useEffect(() => {
+    const reason = params.get("reason") || params.get("error");
+    if (reason === "pending_approval") {
+      setError("Your account is under admin approval. Please wait for the admin to approve your account before logging in.");
+    }
+  }, [params]);
+
   async function onSubmit(v: Values) {
     setError(null);
     try {
-      const { error } = await createClient().auth.signInWithPassword(v);
-      if (error) { setError(error.message === "Invalid login credentials" ? "Email or password is incorrect." : error.message); return; }
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.signInWithPassword(v);
+      if (error) {
+        setError(error.message === "Invalid login credentials" ? "Email or password is incorrect." : error.message);
+        return;
+      }
+      if (data?.user) {
+        const { isApproved, isAdmin, status } = await checkUserApproval(supabase, data.user.id);
+        if (!isApproved && !isAdmin) {
+          await supabase.auth.signOut();
+          if (status === "rejected") {
+            setError("Your access request was declined by the administrator. Contact the admin for access.");
+          } else {
+            setError("Your account is under admin approval. Please wait for the admin to approve your account before logging in.");
+          }
+          return;
+        }
+      }
       const next = params.get("next");
       router.replace(next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard");
       router.refresh();

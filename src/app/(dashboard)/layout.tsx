@@ -3,11 +3,18 @@ import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
 import { MobileNavigation } from "@/components/layout/MobileNavigation";
+import { checkUserApproval } from "@/lib/data/users";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  const { isApproved, isAdmin } = await checkUserApproval(supabase, user.id);
+  if (!isApproved && !isAdmin) {
+    redirect("/pending-approval");
+  }
+
   const fullName = typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name.trim() : "";
   const displayName = fullName || user.email || "";
   return (

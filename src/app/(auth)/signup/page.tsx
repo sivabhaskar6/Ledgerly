@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { signupSchema } from "@/lib/validations/auth";
 import { createClient } from "@/lib/supabase/client";
+import { checkUserApproval } from "@/lib/data/users";
 import { TextField } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { AuthHeading, FormError } from "@/components/layout/AuthShell";
@@ -22,12 +23,44 @@ export default function SignupPage() {
   async function onSubmit(v: Values) {
     setError(null);
     try {
-      const { data, error } = await createClient().auth.signUp({
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.signUp({
         email: v.email, password: v.password,
         options: { emailRedirectTo: `${window.location.origin}/auth/callback`, data: { full_name: v.name } },
       });
-      if (error) { setError(error.message); return; }
-      if (data.session) { router.replace("/dashboard"); router.refresh(); } else setCheckEmail(true);
+      if (error) {
+        if (/rate limit/i.test(error.message)) {
+          setError("Email rate limit exceeded. Please wait a few minutes, or turn off 'Confirm email' in your Supabase Auth dashboard for instant signup.");
+        } else {
+          setError(error.message);
+        }
+        return;
+      }
+      if (data?.user) {
+        try {
+          await supabase
+            .from("profiles")
+            .update({
+              display_name: v.name.trim(),
+              email: v.email.trim().toLowerCase(),
+            })
+            .eq("id", data.user.id);
+        } catch {
+          // ignore
+        }
+      }
+      if (data.session) {
+        const { isApproved, isAdmin } = await checkUserApproval(supabase, data.session.user.id);
+        if (!isApproved && !isAdmin) {
+          await supabase.auth.signOut();
+          router.replace("/pending-approval");
+          return;
+        }
+        router.replace("/dashboard");
+        router.refresh();
+      } else {
+        setCheckEmail(true);
+      }
     } catch {
       setError("Could not reach the server. Check your connection and try again.");
     }
@@ -35,7 +68,10 @@ export default function SignupPage() {
 
   if (checkEmail) return (
     <>
-      <AuthHeading title="Check your email" sub="We sent a confirmation link. Open it to finish creating your account, then log in." />
+      <AuthHeading
+        title="Check your email"
+        sub="We sent a confirmation link. Open it to verify your email address. Once verified, your account will be submitted for admin approval before you can log in."
+      />
       <Link href="/login" className="text-sm text-brand-700 hover:underline">Back to log in</Link>
     </>
   );
