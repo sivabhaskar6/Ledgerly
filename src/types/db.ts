@@ -96,6 +96,7 @@ export type CapitalEntry = {
 
 export type FnoInstrumentType = "call" | "put" | "future";
 export type FnoTradeType = "buy_first" | "sell_first";
+export type FnoSegment = "equity" | "commodity";
 
 export type FnoTrade = {
   id: string;
@@ -107,6 +108,9 @@ export type FnoTrade = {
   expiry_date: string | null;
   trade_type: FnoTradeType;
   quantity: number;
+  lots?: number | null;
+  lot_size?: number | null;
+  segment?: FnoSegment | null;
   buy_price_paise: number;
   sell_price_paise: number;
   charges_paise: number;

@@ -1,6 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { FnoTradeWithRefs } from "@/types/db";
-import { toFnoRow, type FnoFormValues } from "@/lib/validations/fno";
+import {
+  toFnoRow,
+  calculateGrowwCharges,
+  resolveFnoSegment,
+  type FnoFormValues,
+} from "@/lib/validations/fno";
 import { todayISO } from "@/lib/utils/dates";
 
 async function currentUserId(db: SupabaseClient) {
@@ -304,11 +309,25 @@ export async function createFnoTrade(db: SupabaseClient, v: FnoFormValues) {
 
   const income_id = await syncTradeToIncome(db, user_id, row);
 
-  const { error } = await db.from("fno_trades").insert({
+  const payload: Record<string, unknown> = {
     ...row,
     income_id,
     user_id,
-  });
+  };
+
+  let { error } = await db.from("fno_trades").insert(payload);
+  if (
+    error &&
+    (/segment/i.test(error.message) ||
+      /lots/i.test(error.message) ||
+      /lot_size/i.test(error.message))
+  ) {
+    delete payload.segment;
+    delete payload.lots;
+    delete payload.lot_size;
+    const res = await db.from("fno_trades").insert(payload);
+    error = res.error;
+  }
   if (error) throw error;
 }
 
@@ -333,11 +352,32 @@ export async function updateFnoTrade(
     existing?.income_id ?? null
   );
 
-  const { data, error } = await db
+  const payload: Record<string, unknown> = { ...row, income_id };
+
+  let { data, error } = await db
     .from("fno_trades")
-    .update({ ...row, income_id })
+    .update(payload)
     .eq("id", id)
     .select("id");
+
+  if (
+    error &&
+    (/segment/i.test(error.message) ||
+      /lots/i.test(error.message) ||
+      /lot_size/i.test(error.message))
+  ) {
+    delete payload.segment;
+    delete payload.lots;
+    delete payload.lot_size;
+    const res = await db
+      .from("fno_trades")
+      .update(payload)
+      .eq("id", id)
+      .select("id");
+    data = res.data;
+    error = res.error;
+  }
+
   if (error) throw error;
   if (!data?.length) throw new Error("F&O trade not found.");
 }
@@ -453,4 +493,79 @@ export async function permanentlyDeleteFnoTrade(db: SupabaseClient, id: string) 
       // ignore
     }
   }
+}
+
+/**
+ * Recalculates charges and net P&L for all active F&O trades using the latest official Groww rates.
+ * Symmetrically updates both fno_trades and mirrored income/savings records.
+ */
+export async function recalculateAllFnoCharges(
+  db: SupabaseClient
+): Promise<{ updatedCount: number }> {
+  const userId = await currentUserId(db);
+  const { data: trades, error } = await db
+    .from("fno_trades")
+    .select("*")
+    .eq("user_id", userId)
+    .is("deleted_at", null);
+
+  if (error || !trades || trades.length === 0) return { updatedCount: 0 };
+
+  let updatedCount = 0;
+  for (const t of trades) {
+    const buyPriceRupees = (t.buy_price_paise || 0) / 100;
+    const sellPriceRupees = (t.sell_price_paise || 0) / 100;
+    const qty = t.quantity || 1;
+    const symbol = t.symbol || "NIFTY";
+    const segment = resolveFnoSegment(symbol, t.segment);
+    const instrumentType = t.instrument_type || "call";
+
+    const chargesBreakdown = calculateGrowwCharges({
+      segment,
+      instrumentType,
+      quantity: qty,
+      buyPriceRupees,
+      sellPriceRupees,
+      symbol,
+    });
+
+    const newChargesPaise = chargesBreakdown.totalChargesPaise;
+    const buyTurnoverPaise = t.buy_price_paise * qty;
+    const sellTurnoverPaise = t.sell_price_paise * qty;
+    const grossPnlPaise = sellTurnoverPaise - buyTurnoverPaise;
+    const netPnlPaise = grossPnlPaise - newChargesPaise;
+
+    const updatePayload: Record<string, unknown> = {
+      charges_paise: newChargesPaise,
+      gross_pnl_paise: grossPnlPaise,
+      net_pnl_paise: netPnlPaise,
+      segment,
+    };
+
+    const { error: updateErr } = await db
+      .from("fno_trades")
+      .update(updatePayload)
+      .eq("id", t.id);
+
+    if (updateErr && /segment/i.test(updateErr.message)) {
+      delete updatePayload.segment;
+      await db.from("fno_trades").update(updatePayload).eq("id", t.id);
+    }
+
+    await syncTradeToIncome(
+      db,
+      userId,
+      {
+        ...t,
+        segment,
+        gross_pnl_paise: grossPnlPaise,
+        net_pnl_paise: netPnlPaise,
+      },
+      t.income_id
+    );
+
+    updatedCount++;
+  }
+
+  return { updatedCount };
 }

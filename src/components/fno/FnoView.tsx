@@ -15,13 +15,16 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   IndianRupee,
+  Calculator,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
   fetchFnoTrades,
   deleteFnoTrade,
+  recalculateAllFnoCharges,
   type FnoSummary,
 } from "@/lib/data/fno";
+import { resolveFnoSegment } from "@/lib/validations/fno";
 import { fetchAccounts } from "@/lib/data/accounts";
 import { errorMessage } from "@/lib/data/expenses";
 import { formatINR } from "@/lib/utils/money";
@@ -49,6 +52,7 @@ export function FnoView() {
 
   // Filter State
   const [search, setSearch] = useState("");
+  const [segmentFilter, setSegmentFilter] = useState<string>("all");
   const [instrumentFilter, setInstrumentFilter] = useState<string>("all");
   const [outcomeFilter, setOutcomeFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("all");
@@ -88,6 +92,25 @@ export function FnoView() {
     }
   }
 
+  const [syncingGroww, setSyncingGroww] = useState(false);
+
+  async function handleSyncGrowwCharges() {
+    setSyncingGroww(true);
+    try {
+      const db = createClient();
+      const res = await recalculateAllFnoCharges(db);
+      notify(
+        "success",
+        `Updated ${res.updatedCount} trade(s) with exact official Groww charges & taxes.`
+      );
+      await load();
+    } catch (e) {
+      notify("error", errorMessage(e, "Could not update Groww charges."));
+    } finally {
+      setSyncingGroww(false);
+    }
+  }
+
   // Filtered trades
   const filteredTrades = useMemo(() => {
     if (!data?.trades) return [];
@@ -107,6 +130,12 @@ export function FnoView() {
         if (!match) return false;
       }
 
+      // Filter by segment
+      if (segmentFilter !== "all") {
+        const seg = resolveFnoSegment(t.symbol, t.segment);
+        if (seg !== segmentFilter) return false;
+      }
+
       // Filter by instrument
       if (instrumentFilter !== "all" && t.instrument_type !== instrumentFilter) {
         return false;
@@ -121,7 +150,7 @@ export function FnoView() {
 
       return true;
     });
-  }, [data?.trades, search, instrumentFilter, outcomeFilter, dateFilter]);
+  }, [data?.trades, search, segmentFilter, instrumentFilter, outcomeFilter, dateFilter]);
 
   return (
     <>
@@ -130,6 +159,17 @@ export function FnoView() {
         description="Daily trading journal for Futures & Options with Call/Put tracking, bought & sold prices, charges, and profit/loss."
         actions={
           <div className="flex flex-wrap gap-2">
+            {(data?.trades.length ?? 0) > 0 && (
+              <Button
+                variant="secondary"
+                onClick={() => void handleSyncGrowwCharges()}
+                loading={syncingGroww}
+                title="Recalculate all trade charges using official Groww rates"
+              >
+                <Calculator className="h-4 w-4" aria-hidden />
+                Sync Groww Charges
+              </Button>
+            )}
             <Link href="/income">
               <Button variant="secondary">
                 <IndianRupee className="h-4 w-4" aria-hidden />
@@ -305,6 +345,17 @@ export function FnoView() {
             Filter:
           </span>
 
+          {/* Market Segment Filter */}
+          <select
+            value={segmentFilter}
+            onChange={(e) => setSegmentFilter(e.target.value)}
+            className="h-8 rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-700 focus:outline-none"
+          >
+            <option value="all">All Segments</option>
+            <option value="equity">Equity / Index F&O</option>
+            <option value="commodity">Commodities</option>
+          </select>
+
           {/* Instrument Filter */}
           <select
             value={instrumentFilter}
@@ -428,18 +479,30 @@ export function FnoView() {
                               : "FUT"}
                           </span>
                           <div>
-                            <span className="font-bold text-slate-900">{t.symbol}</span>
-                            {t.strike_price_paise && (
-                              <span className="num ml-1 font-semibold text-slate-700">
-                                {Math.floor(t.strike_price_paise / 100)}
-                              </span>
-                            )}
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-bold text-slate-900">{t.symbol}</span>
+                              {t.strike_price_paise && (
+                                <span className="num font-semibold text-slate-700">
+                                  {Math.floor(t.strike_price_paise / 100)}
+                                </span>
+                              )}
+                              {resolveFnoSegment(t.symbol, t.segment) === "commodity" && (
+                                <span className="rounded bg-amber-100 px-1 py-0.2 text-[10px] font-semibold text-amber-800">
+                                  MCX
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </td>
 
                       <td className="num whitespace-nowrap px-4 py-3 text-right font-medium text-slate-700">
-                        {t.quantity}
+                        <div>{t.quantity}</div>
+                        {t.lots && (
+                          <div className="text-[10px] text-slate-400">
+                            {t.lots} {t.lots === 1 ? "Lot" : "Lots"}
+                          </div>
+                        )}
                       </td>
 
                       <td className="num whitespace-nowrap px-4 py-3 text-right text-slate-600">
