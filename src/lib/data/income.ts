@@ -23,14 +23,16 @@ export type Income = {
 
 export const INCOME_PAGE_SIZE = 20;
 
-export async function fetchIncome(db: SupabaseClient, page: number) {
+export async function fetchIncome(db: SupabaseClient, page: number = 0) {
   // 1. Attempt to sync any unsynced F&O trades and IPO gains into the database income table
   await Promise.all([
     syncUnsyncedFnoTrades(db).catch(() => 0),
     syncUnsyncedIpoGains(db).catch(() => 0),
   ]);
 
-  const from = page * INCOME_PAGE_SIZE;
+  const fetchAll = page === -1;
+  const from = fetchAll ? 0 : page * INCOME_PAGE_SIZE;
+  const to = fetchAll ? 4999 : from + INCOME_PAGE_SIZE - 1;
 
   let data: Income[] | null = null;
   let count: number | null = null;
@@ -43,7 +45,7 @@ export async function fetchIncome(db: SupabaseClient, page: number) {
       .is("deleted_at", null)
       .order("occurred_on", { ascending: false })
       .order("created_at", { ascending: false })
-      .range(from, from + INCOME_PAGE_SIZE - 1);
+      .range(from, to);
     data = (res.data as unknown as Income[]) ?? null;
     count = res.count;
     queryError = res.error;
@@ -55,7 +57,7 @@ export async function fetchIncome(db: SupabaseClient, page: number) {
         .select("*", { count: "exact" })
         .order("occurred_on", { ascending: false })
         .order("created_at", { ascending: false })
-        .range(from, from + INCOME_PAGE_SIZE - 1);
+        .range(from, to);
       data = (fb.data as unknown as Income[]) ?? null;
       count = fb.count;
       queryError = fb.error;
@@ -167,10 +169,14 @@ export async function fetchIncome(db: SupabaseClient, page: number) {
     });
 
     totalCount += syntheticRows.length;
-    rows = combined.slice(from, from + INCOME_PAGE_SIZE);
+    rows = fetchAll ? combined : combined.slice(from, from + INCOME_PAGE_SIZE);
   }
 
   return { rows, count: totalCount };
+}
+
+export async function fetchAllIncome(db: SupabaseClient) {
+  return fetchIncome(db, -1);
 }
 
 export async function fetchIncomeSummary(db: SupabaseClient) {

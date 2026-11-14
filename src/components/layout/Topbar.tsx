@@ -23,7 +23,7 @@ export function Topbar({ name }: { name: string }) {
     }
   }
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-6">
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-6">
       <span className="text-lg font-semibold text-brand-700 md:hidden">Ledgerly</span>
       <span className="hidden text-sm text-slate-500 md:block">{name}</span>
       <button onClick={logout} disabled={busy} className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 disabled:opacity-60">

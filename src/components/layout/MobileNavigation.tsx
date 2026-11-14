@@ -7,11 +7,12 @@ import { Menu } from "lucide-react";
 import { NAV } from "./nav";
 import { Dialog } from "@/components/ui/Dialog";
 
-export function MobileNavigation() {
+export function MobileNavigation({ isAdmin }: { isAdmin?: boolean }) {
   const path = usePathname();
   const [more, setMore] = useState(false);
-  const primary = NAV.filter((n) => n.primaryOnMobile);
-  const rest = NAV.filter((n) => !n.primaryOnMobile);
+  const items = NAV.filter((n) => !n.adminOnly || isAdmin);
+  const primary = items.filter((n) => n.primaryOnMobile);
+  const rest = items.filter((n) => !n.primaryOnMobile);
   return (
     <>
       <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-40 flex border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden">

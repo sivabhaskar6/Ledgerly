@@ -10,7 +10,6 @@ import { createClient } from "@/lib/supabase/client";
 import { errorMessage, fetchCategories } from "@/lib/data/expenses";
 import { formatINR } from "@/lib/utils/money";
 import { presetRange, type Preset } from "@/lib/utils/dates";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { SelectField, TextField } from "@/components/ui/Field";
@@ -54,45 +53,85 @@ export function CategoriesView() {
   const sorted = useMemo(() => [...cats].sort((a, b) => (totals[b.id]?.total ?? 0) - (totals[a.id]?.total ?? 0) || a.name.localeCompare(b.name)), [cats, totals]);
 
   return (
-    <>
-      <PageHeader title="Spending categories" description="See where your money goes and manage your categories."
-        actions={<Button onClick={() => setEditing("new")}><Plus className="h-4 w-4" aria-hidden />Add category</Button>} />
-      <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Date range">
+    <div className="flex flex-col flex-1 min-h-0">
+      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900">Spending categories</h1>
+          <p className="mt-0.5 text-xs text-slate-500">See where your money goes and manage your categories.</p>
+        </div>
+        <Button onClick={() => setEditing("new")} className="h-9 px-3.5 text-xs font-semibold shadow-xs">
+          <Plus className="h-4 w-4" aria-hidden />Add category
+        </Button>
+      </div>
+
+      <div className="mb-2 flex flex-wrap gap-1.5 shrink-0" role="group" aria-label="Date range">
         {RANGES.map((r) => (
-          <button key={r.key} onClick={() => setRange(r.key)} aria-pressed={range === r.key}
-            className={`rounded-full border px-3 py-1 text-xs font-medium ${range === r.key ? "border-brand-600 bg-brand-50 text-brand-700" : "border-slate-300 text-slate-700 hover:bg-slate-50"}`}>{r.label}</button>
+          <button
+            key={r.key}
+            onClick={() => setRange(r.key)}
+            aria-pressed={range === r.key}
+            className={`h-8 rounded-lg border px-3 text-xs font-medium transition shadow-xs ${
+              range === r.key
+                ? "border-brand-600 bg-brand-50 text-brand-700 font-semibold"
+                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+            }`}
+          >
+            {r.label}
+          </button>
         ))}
       </div>
-      {error && <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error} <button className="underline" onClick={() => void load()}>Try again</button></div>}
-      {loading ? <ListSkeleton /> : sorted.length === 0 && !error ? (
-        <EmptyState title="No categories yet" body="Add a category to start organising expenses." />
-      ) : (
-        <ul className="divide-y divide-slate-100 rounded-card border border-slate-200 bg-white">
-          {sorted.map((c) => {
-            const t = totals[c.id] ?? { total: 0, count: 0 };
-            const pct = grand > 0 ? (t.total / grand) * 100 : 0;
-            return (
-              <li key={c.id} className="p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <Link href={`/expenses?category=${c.id}`} className="flex min-w-0 items-center gap-2 font-medium hover:underline">
-                    <span className="h-3 w-3 shrink-0 rounded-full" style={{ background: colorOf(c.color) }} aria-hidden />
-                    <span className="truncate">{c.name}</span>
-                  </Link>
-                  <div className="flex items-center gap-1">
-                    <span className="num mr-2 text-sm"><span className="font-semibold">{formatINR(t.total)}</span> <span className="text-slate-500">· {pct.toFixed(1)}% · {t.count} {t.count === 1 ? "expense" : "expenses"}</span></span>
-                    <button aria-label={`Edit ${c.name}`} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100" onClick={() => setEditing(c)}><Pencil className="h-4 w-4" /></button>
-                    <button aria-label={`Delete ${c.name}`} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-red-600" onClick={() => setDeleting(c)}><Trash2 className="h-4 w-4" /></button>
-                  </div>
-                </div>
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100" role="presentation"><div className="h-full rounded-full" style={{ width: `${pct}%`, background: colorOf(c.color) }} /></div>
-              </li>
-            );
-          })}
-        </ul>
+
+      {error && (
+        <div role="alert" className="mb-2.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs text-red-700 shrink-0">
+          {error} <button className="underline" onClick={() => void load()}>Try again</button>
+        </div>
       )}
+
+      <div className="flex-1 min-h-0 flex flex-col">
+        {loading ? (
+          <ListSkeleton />
+        ) : sorted.length === 0 && !error ? (
+          <EmptyState title="No categories yet" body="Add a category to start organising expenses." />
+        ) : (
+          <div className="flex-1 min-h-0 overflow-y-auto rounded-card border border-slate-200 bg-white shadow-sm">
+            <ul className="divide-y divide-slate-100">
+              {sorted.map((c) => {
+                const t = totals[c.id] ?? { total: 0, count: 0 };
+                const pct = grand > 0 ? (t.total / grand) * 100 : 0;
+                return (
+                  <li key={c.id} className="px-4 py-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <Link href={`/expenses?category=${c.id}`} className="flex min-w-0 items-center gap-2 font-medium hover:underline text-xs md:text-sm text-slate-900">
+                        <span className="h-3 w-3 shrink-0 rounded-full" style={{ background: colorOf(c.color) }} aria-hidden />
+                        <span className="truncate font-semibold">{c.name}</span>
+                      </Link>
+                      <div className="flex items-center gap-1">
+                        <span className="num mr-2 text-xs md:text-sm">
+                          <span className="font-bold text-slate-900">{formatINR(t.total)}</span>{" "}
+                          <span className="text-slate-500">· {pct.toFixed(1)}% · {t.count} {t.count === 1 ? "expense" : "expenses"}</span>
+                        </span>
+                        <button aria-label={`Edit ${c.name}`} className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100" onClick={() => setEditing(c)}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button aria-label={`Delete ${c.name}`} className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-red-600" onClick={() => setDeleting(c)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100" role="presentation">
+                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: colorOf(c.color) }} />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+      </div>
+
       <CategoryForm target={editing} onClose={() => setEditing(null)} onSaved={() => void load()} notify={notify} />
       <DeleteCategory target={deleting} all={cats} counts={totals} onClose={() => setDeleting(null)} onDone={() => void load()} notify={notify} />
-    </>
+    </div>
   );
 }
 

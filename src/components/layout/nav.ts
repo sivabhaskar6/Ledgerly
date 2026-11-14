@@ -13,10 +13,18 @@ import {
   FileBarChart,
   Trash2,
   Settings,
+  HandCoins,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 
-export type NavItem = { href: string; label: string; icon: LucideIcon; primaryOnMobile?: boolean };
+export type NavItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  primaryOnMobile?: boolean;
+  adminOnly?: boolean;
+};
 
 export const NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, primaryOnMobile: true },
@@ -27,10 +35,12 @@ export const NAV: NavItem[] = [
   { href: "/ipo", label: "IPO Listing Gains", icon: Rocket },
   { href: "/fno", label: "F&O Trading", icon: CandlestickChart },
   { href: "/savings", label: "Savings", icon: Wallet },
+  { href: "/borrowing", label: "Borrow & Lend", icon: HandCoins },
   { href: "/accounts", label: "Accounts", icon: Landmark },
   { href: "/spending-categories", label: "Categories", icon: Tags },
   { href: "/monthly-trends", label: "Monthly trends", icon: TrendingUp },
   { href: "/reports", label: "Reports", icon: FileBarChart },
   { href: "/recently-deleted", label: "Recently deleted", icon: Trash2 },
   { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/user-approvals", label: "User Approvals", icon: ShieldCheck, adminOnly: true },
 ];

@@ -30,6 +30,7 @@ export type PaymentMethodReportRow = {
 };
 
 export type TransactionReportRow = {
+  id?: string;
   date: string;
   category: string;
   title: string;
@@ -37,6 +38,7 @@ export type TransactionReportRow = {
   method: string;
   note: string;
   amountPaise: number;
+  type: "expense" | "income";
 };
 
 export type FullReport = {
@@ -45,10 +47,27 @@ export type FullReport = {
   netSavingsPaise: number;
   savingsRatePct: number | null;
   transactionCount: number;
+  expenseCount: number;
+  incomeCount: number;
   categoryRows: CategoryReportRow[];
   accountRows: AccountReportRow[];
   methodRows: PaymentMethodReportRow[];
   transactions: TransactionReportRow[];
+};
+
+export const sourceLabel = (v: string) => {
+  const map: Record<string, string> = {
+    salary: "Salary",
+    business: "Business",
+    dividend: "Dividend",
+    stock_profit: "Stock Profit",
+    fno_trading: "F&O Trading",
+    ipo_gain: "IPO Listing",
+    crypto: "Crypto",
+    rental: "Rental",
+    other: "Other Income",
+  };
+  return map[v] || v;
 };
 
 export async function fetchFullReport(db: SupabaseClient, filter: ReportFilter): Promise<FullReport> {
@@ -68,15 +87,29 @@ export async function fetchFullReport(db: SupabaseClient, filter: ReportFilter):
   if (expErr) throw expErr;
 
   // Query income (excluding transfers or capital movements)
-  let incQuery = db.from("income").select("amount_paise, occurred_on").is("deleted_at", null);
+  let incQuery = db
+    .from("income")
+    .select("id, amount_paise, occurred_on, title, source, note")
+    .is("deleted_at", null);
   if (filter.from) incQuery = incQuery.gte("occurred_on", filter.from);
   if (filter.to) incQuery = incQuery.lte("occurred_on", filter.to);
 
   let totalIncomePaise = 0;
+  const incomeRows: Array<{
+    id: string;
+    amount_paise: number;
+    occurred_on: string;
+    title: string;
+    source: string;
+    note: string | null;
+  }> = [];
+
   try {
     let { data: incomeData, error: incErr } = await incQuery;
     if (incErr && /deleted_at/i.test(incErr.message)) {
-      let fbQuery = db.from("income").select("amount_paise, occurred_on");
+      let fbQuery = db
+        .from("income")
+        .select("id, amount_paise, occurred_on, title, source, note");
       if (filter.from) fbQuery = fbQuery.gte("occurred_on", filter.from);
       if (filter.to) fbQuery = fbQuery.lte("occurred_on", filter.to);
       const fb = await fbQuery;
@@ -84,24 +117,88 @@ export async function fetchFullReport(db: SupabaseClient, filter: ReportFilter):
       incErr = fb.error;
     }
     if (!incErr && incomeData) {
-      totalIncomePaise = incomeData.reduce((sum, r) => sum + Number(r.amount_paise), 0);
+      for (const r of incomeData) {
+        const paise = Number(r.amount_paise);
+        totalIncomePaise += paise;
+        incomeRows.push({
+          id: r.id,
+          amount_paise: paise,
+          occurred_on: r.occurred_on,
+          title: r.title,
+          source: r.source,
+          note: r.note,
+        });
+      }
     }
 
     // Also include any unsynced non-deleted F&O trades (where income_id is null)
-    let fnoQuery = db.from("fno_trades").select("net_pnl_paise, occurred_on").is("income_id", null).is("deleted_at", null);
+    let fnoQuery = db
+      .from("fno_trades")
+      .select("id, symbol, instrument_type, strike_price_paise, net_pnl_paise, occurred_on, note")
+      .is("income_id", null)
+      .is("deleted_at", null);
     if (filter.from) fnoQuery = fnoQuery.gte("occurred_on", filter.from);
     if (filter.to) fnoQuery = fnoQuery.lte("occurred_on", filter.to);
     const fnoRes = await fnoQuery;
     let unsyncedTrades = fnoRes.data;
     if (fnoRes.error && /deleted_at/i.test(fnoRes.error.message)) {
-      let fbFno = db.from("fno_trades").select("net_pnl_paise, occurred_on").is("income_id", null);
+      let fbFno = db
+        .from("fno_trades")
+        .select("id, symbol, instrument_type, strike_price_paise, net_pnl_paise, occurred_on, note")
+        .is("income_id", null);
       if (filter.from) fbFno = fbFno.gte("occurred_on", filter.from);
       if (filter.to) fbFno = fbFno.lte("occurred_on", filter.to);
       const fb = await fbFno;
       unsyncedTrades = fb.data;
     }
     if (unsyncedTrades) {
-      totalIncomePaise += unsyncedTrades.reduce((sum, r) => sum + Number(r.net_pnl_paise || 0), 0);
+      for (const t of unsyncedTrades) {
+        const paise = Number(t.net_pnl_paise || 0);
+        totalIncomePaise += paise;
+        incomeRows.push({
+          id: `fno_${t.id}`,
+          amount_paise: paise,
+          occurred_on: t.occurred_on,
+          title: `${t.symbol} ${t.instrument_type || ""}`.trim(),
+          source: "fno_trading",
+          note: t.note || (paise >= 0 ? "Realized F&O profit" : "Realized F&O loss"),
+        });
+      }
+    }
+
+    // Also include any unsynced non-deleted IPO listing gains (where income_id is null)
+    let ipoQuery = db
+      .from("ipo_gains")
+      .select("id, symbol, name, net_pnl_paise, occurred_on, note")
+      .is("income_id", null)
+      .is("deleted_at", null);
+    if (filter.from) ipoQuery = ipoQuery.gte("occurred_on", filter.from);
+    if (filter.to) ipoQuery = ipoQuery.lte("occurred_on", filter.to);
+    const ipoRes = await ipoQuery;
+    let unsyncedIpos = ipoRes.data;
+    if (ipoRes.error && /deleted_at/i.test(ipoRes.error.message)) {
+      let fbIpo = db
+        .from("ipo_gains")
+        .select("id, symbol, name, net_pnl_paise, occurred_on, note")
+        .is("income_id", null);
+      if (filter.from) fbIpo = fbIpo.gte("occurred_on", filter.from);
+      if (filter.to) fbIpo = fbIpo.lte("occurred_on", filter.to);
+      const fb = await fbIpo;
+      unsyncedIpos = fb.data;
+    }
+    if (unsyncedIpos) {
+      for (const ipo of unsyncedIpos) {
+        const paise = Number(ipo.net_pnl_paise || 0);
+        totalIncomePaise += paise;
+        incomeRows.push({
+          id: `ipo_${ipo.id}`,
+          amount_paise: paise,
+          occurred_on: ipo.occurred_on,
+          title: `${ipo.symbol} - ${ipo.name || "Listing Gain"}`,
+          source: "ipo_gain",
+          note: ipo.note || "IPO Listing Gain",
+        });
+      }
     }
   } catch {
     // Continue
@@ -143,8 +240,29 @@ export async function fetchFullReport(db: SupabaseClient, filter: ReportFilter):
       method,
       note: t.note || "",
       amountPaise: paise,
+      type: "expense",
     });
   }
+
+  // Include income rows in scope if not filtering specifically by an expense category
+  if (!filter.categoryId) {
+    for (const inc of incomeRows) {
+      txRows.push({
+        id: inc.id,
+        date: inc.occurred_on,
+        category: sourceLabel(inc.source),
+        title: inc.title,
+        account: "Income",
+        method: "DIRECT",
+        note: inc.note || "",
+        amountPaise: inc.amount_paise,
+        type: "income",
+      });
+    }
+  }
+
+  // Sort chronologically newest first
+  txRows.sort((a, b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : 0));
 
   const categoryRows: CategoryReportRow[] = Array.from(catMap.entries()).map(([categoryName, v]) => ({
     categoryName,
@@ -175,7 +293,9 @@ export async function fetchFullReport(db: SupabaseClient, filter: ReportFilter):
     totalIncomePaise,
     netSavingsPaise,
     savingsRatePct,
-    transactionCount: expenses?.length ?? 0,
+    transactionCount: txRows.length,
+    expenseCount: expenses?.length ?? 0,
+    incomeCount: txRows.length - (expenses?.length ?? 0),
     categoryRows,
     accountRows,
     methodRows,
@@ -186,6 +306,7 @@ export async function fetchFullReport(db: SupabaseClient, filter: ReportFilter):
 export function exportReportToCSV(report: FullReport, filename = "ledgerly_report.csv") {
   const rows = report.transactions.map((t) => ({
     Date: t.date,
+    Type: t.type === "income" ? "Income / P&L" : "Expense",
     Category: t.category,
     Title: t.title,
     "Amount (INR)": paiseToRupeesString(t.amountPaise),
@@ -234,9 +355,10 @@ export function exportReportToExcel(report: FullReport, filename = "ledgerly_rep
 
   // Sheet 3: Transactions
   const txData = [
-    ["Date", "Category", "Title", "Amount (INR)", "Account", "Payment Method", "Note"],
+    ["Date", "Type", "Category", "Title", "Amount (INR)", "Account", "Payment Method", "Note"],
     ...report.transactions.map((t) => [
       t.date,
+      t.type === "income" ? "Income / P&L" : "Expense",
       t.category,
       t.title,
       paiseToRupeesString(t.amountPaise),

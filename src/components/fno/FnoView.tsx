@@ -15,22 +15,19 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   IndianRupee,
-  Calculator,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
   fetchFnoTrades,
   deleteFnoTrade,
-  recalculateAllFnoCharges,
   type FnoSummary,
 } from "@/lib/data/fno";
 import { resolveFnoSegment } from "@/lib/validations/fno";
 import { fetchAccounts } from "@/lib/data/accounts";
 import { errorMessage } from "@/lib/data/expenses";
 import { formatINR } from "@/lib/utils/money";
-import { displayDate, todayISO } from "@/lib/utils/dates";
+import { displayDate, todayISO, presetRange } from "@/lib/utils/dates";
 import type { Account, FnoTradeWithRefs } from "@/types/db";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -56,6 +53,30 @@ export function FnoView() {
   const [instrumentFilter, setInstrumentFilter] = useState<string>("all");
   const [outcomeFilter, setOutcomeFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("all");
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
+
+  // Available years extracted from trades
+  const availableYears = useMemo(() => {
+    if (!data?.trades || data.trades.length === 0) {
+      return [new Date().getFullYear()];
+    }
+    const yearsSet = new Set<number>();
+    yearsSet.add(new Date().getFullYear());
+    for (const t of data.trades) {
+      if (t.occurred_on) {
+        const yr = parseInt(t.occurred_on.slice(0, 4), 10);
+        if (!isNaN(yr)) yearsSet.add(yr);
+      }
+    }
+    return Array.from(yearsSet).sort((a, b) => b - a);
+  }, [data?.trades]);
+
+  const handleSelectYear = (yr: number | null) => {
+    setSelectedYear(yr);
+    if (yr !== null && yr !== new Date().getFullYear()) {
+      setDateFilter("all");
+    }
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -89,25 +110,6 @@ export function FnoView() {
       await load();
     } catch (e) {
       notify("error", errorMessage(e, "Could not delete F&O trade."));
-    }
-  }
-
-  const [syncingGroww, setSyncingGroww] = useState(false);
-
-  async function handleSyncGrowwCharges() {
-    setSyncingGroww(true);
-    try {
-      const db = createClient();
-      const res = await recalculateAllFnoCharges(db);
-      notify(
-        "success",
-        `Updated ${res.updatedCount} trade(s) with exact official Groww charges & taxes.`
-      );
-      await load();
-    } catch (e) {
-      notify("error", errorMessage(e, "Could not update Groww charges."));
-    } finally {
-      setSyncingGroww(false);
     }
   }
 
@@ -145,57 +147,142 @@ export function FnoView() {
       if (outcomeFilter === "profit" && t.net_pnl_paise <= 0) return false;
       if (outcomeFilter === "loss" && t.net_pnl_paise >= 0) return false;
 
-      // Filter by date
-      if (dateFilter === "today" && t.occurred_on !== today) return false;
+      // Filter by selected year
+      if (selectedYear !== null) {
+        if (!t.occurred_on.startsWith(String(selectedYear))) return false;
+      }
+
+      // Filter by date preset
+      if (dateFilter === "today") {
+        if (t.occurred_on !== today) return false;
+      } else if (dateFilter === "week") {
+        const w = presetRange("week");
+        if (t.occurred_on < w.from || t.occurred_on > w.to) return false;
+      } else if (dateFilter === "month") {
+        const m = presetRange("month");
+        if (t.occurred_on < m.from || t.occurred_on > m.to) return false;
+      } else if (dateFilter === "year") {
+        const y = presetRange("year");
+        if (t.occurred_on < y.from || t.occurred_on > y.to) return false;
+      }
 
       return true;
     });
-  }, [data?.trades, search, segmentFilter, instrumentFilter, outcomeFilter, dateFilter]);
+  }, [data?.trades, search, segmentFilter, instrumentFilter, outcomeFilter, selectedYear, dateFilter]);
+
+  // Derived KPI metrics that dynamically reflect the active filters
+  const kpiMetrics = useMemo(() => {
+    const today = todayISO();
+    if (!filteredTrades) {
+      return {
+        netPnlPaise: 0,
+        chargesPaise: 0,
+        tradesCount: 0,
+        winTrades: 0,
+        lossTrades: 0,
+        winRatePct: null as number | null,
+        todayNetPnlPaise: 0,
+        todayTradesCount: 0,
+      };
+    }
+
+    let netPnl = 0;
+    let charges = 0;
+    let winCount = 0;
+    let lossCount = 0;
+    let todayPnl = 0;
+    let todayCount = 0;
+
+    for (const t of filteredTrades) {
+      netPnl += t.net_pnl_paise;
+      charges += t.charges_paise;
+      if (t.net_pnl_paise > 0) winCount++;
+      else if (t.net_pnl_paise < 0) lossCount++;
+
+      if (t.occurred_on === today) {
+        todayPnl += t.net_pnl_paise;
+        todayCount++;
+      }
+    }
+
+    const decisiveTrades = winCount + lossCount;
+    const winRate = decisiveTrades > 0 ? Math.round((winCount / decisiveTrades) * 1000) / 10 : null;
+
+    return {
+      netPnlPaise: netPnl,
+      chargesPaise: charges,
+      tradesCount: filteredTrades.length,
+      winTrades: winCount,
+      lossTrades: lossCount,
+      winRatePct: winRate,
+      todayNetPnlPaise: todayPnl,
+      todayTradesCount: todayCount,
+    };
+  }, [filteredTrades]);
 
   return (
-    <>
-      <PageHeader
-        title="F&O Trading"
-        description="Daily trading journal for Futures & Options with Call/Put tracking, bought & sold prices, charges, and profit/loss."
-        actions={
-          <div className="flex flex-wrap gap-2">
-            {(data?.trades.length ?? 0) > 0 && (
-              <Button
-                variant="secondary"
-                onClick={() => void handleSyncGrowwCharges()}
-                loading={syncingGroww}
-                title="Recalculate all trade charges using official Groww rates"
-              >
-                <Calculator className="h-4 w-4" aria-hidden />
-                Sync Groww Charges
-              </Button>
+    <div className="flex flex-col flex-1 min-h-0">
+      {/* Header Bar */}
+      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold tracking-tight text-slate-900">F&O Trading</h1>
+            {/* Year Switcher */}
+            {availableYears.length > 0 && (
+              <div className="flex items-center rounded-lg border border-slate-200 bg-white p-0.5 text-xs shadow-xs">
+                <button
+                  type="button"
+                  onClick={() => handleSelectYear(null)}
+                  className={`rounded-md px-2 py-0.5 font-medium transition ${
+                    selectedYear === null
+                      ? "bg-slate-900 text-white"
+                      : "text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  All Years
+                </button>
+                {availableYears.map((yr) => (
+                  <button
+                    type="button"
+                    key={yr}
+                    onClick={() => handleSelectYear(yr)}
+                    className={`rounded-md px-2 py-0.5 font-medium transition ${
+                      selectedYear === yr
+                        ? "bg-slate-900 text-white"
+                        : "text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    {yr}
+                  </button>
+                ))}
+              </div>
             )}
-            <Link href="/income">
-              <Button variant="secondary">
-                <IndianRupee className="h-4 w-4" aria-hidden />
-                View Income
-              </Button>
-            </Link>
-            <Button
-              onClick={() => {
-                setEditingTrade(null);
-                setFormOpen(true);
-              }}
-            >
-              <Plus className="h-4 w-4" aria-hidden />
-              Record F&O trade
-            </Button>
           </div>
-        }
-      />
+          <p className="mt-0.5 text-xs text-slate-500">
+            Daily trading journal for Futures & Options with Call/Put tracking, bought & sold prices, charges, and profit/loss.
+          </p>
+        </div>
+
+        {/* Action: Single prominent button on the right */}
+        <Button
+          onClick={() => {
+            setEditingTrade(null);
+            setFormOpen(true);
+          }}
+          className="h-9 px-3.5 text-xs font-semibold shadow-xs"
+        >
+          <Plus className="h-4 w-4" aria-hidden />
+          Record F&O trade
+        </Button>
+      </div>
 
       {data?.tableMissing && (
         <div
           role="alert"
-          className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800"
+          className="mb-2.5 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800 shrink-0"
         >
           <p className="font-semibold">Setup Required: Run Database Migration</p>
-          <p className="mt-1">
+          <p className="mt-0.5">
             The <code className="rounded bg-amber-100 px-1 py-0.5 text-xs font-mono">fno_trades</code> table is not yet created in your Supabase project.
             Copy and paste the SQL from{" "}
             <code className="rounded bg-amber-100 px-1 py-0.5 text-xs font-mono">
@@ -209,7 +296,7 @@ export function FnoView() {
       {error && (
         <div
           role="alert"
-          className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+          className="mb-2.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs text-red-700 shrink-0"
         >
           {error}{" "}
           <button className="underline" onClick={() => void load()}>
@@ -219,129 +306,132 @@ export function FnoView() {
       )}
 
       {/* KPI Metric Cards */}
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
+      <div className="mb-2 grid grid-cols-2 gap-2 sm:grid-cols-5 shrink-0">
         {/* Total Net P&L */}
-        <div className="rounded-card border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-slate-500">Net Realized P&L</p>
-            {data?.totalNetPnlPaise !== undefined && data.totalNetPnlPaise >= 0 ? (
-              <TrendingUp className="h-4 w-4 text-emerald-600" />
+            <p className="text-[11px] font-medium text-slate-500">Net Realized P&L</p>
+            {kpiMetrics.netPnlPaise >= 0 ? (
+              <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
             ) : (
-              <TrendingDown className="h-4 w-4 text-rose-600" />
+              <TrendingDown className="h-3.5 w-3.5 text-rose-600" />
             )}
           </div>
           {loading && !data ? (
-            <Skeleton className="mt-2 h-7 w-28" />
-          ) : data ? (
+            <Skeleton className="mt-1 h-6 w-24" />
+          ) : (
             <p
-              className={`num mt-1 text-xl font-bold md:text-2xl ${
-                data.totalNetPnlPaise >= 0 ? "text-emerald-700" : "text-rose-700"
+              className={`num mt-0.5 text-lg font-bold md:text-xl ${
+                kpiMetrics.netPnlPaise >= 0 ? "text-emerald-700" : "text-rose-700"
               }`}
             >
-              {data.totalNetPnlPaise >= 0
-                ? `+${formatINR(data.totalNetPnlPaise)}`
-                : formatINR(data.totalNetPnlPaise)}
+              {kpiMetrics.netPnlPaise >= 0
+                ? `+${formatINR(kpiMetrics.netPnlPaise)}`
+                : formatINR(kpiMetrics.netPnlPaise)}
             </p>
-          ) : (
-            <p className="num mt-1 text-lg font-semibold text-slate-400">—</p>
           )}
-          <p className="mt-1 text-xs text-slate-400">After brokerage & charges</p>
+          <p className="text-[10px] text-slate-400 truncate">After brokerage & charges</p>
         </div>
 
         {/* Today's Net P&L */}
-        <div className="rounded-card border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-slate-500">Today&apos;s P&L</p>
-            <Activity className="h-4 w-4 text-brand-600" />
+            <p className="text-[11px] font-medium text-slate-500">Today&apos;s P&L</p>
+            <Activity className="h-3.5 w-3.5 text-brand-600" />
           </div>
           {loading && !data ? (
-            <Skeleton className="mt-2 h-7 w-28" />
-          ) : data ? (
+            <Skeleton className="mt-1 h-6 w-24" />
+          ) : (
             <p
-              className={`num mt-1 text-xl font-bold md:text-2xl ${
-                data.todayNetPnlPaise >= 0 ? "text-emerald-700" : "text-rose-700"
+              className={`num mt-0.5 text-lg font-bold md:text-xl ${
+                kpiMetrics.todayNetPnlPaise >= 0 ? "text-emerald-700" : "text-rose-700"
               }`}
             >
-              {data.todayNetPnlPaise >= 0
-                ? `+${formatINR(data.todayNetPnlPaise)}`
-                : formatINR(data.todayNetPnlPaise)}
+              {kpiMetrics.todayNetPnlPaise >= 0
+                ? `+${formatINR(kpiMetrics.todayNetPnlPaise)}`
+                : formatINR(kpiMetrics.todayNetPnlPaise)}
             </p>
-          ) : (
-            <p className="num mt-1 text-lg font-semibold text-slate-400">—</p>
           )}
-          <p className="mt-1 text-xs text-slate-400">
-            {data?.todayTradesCount ?? 0} trade(s) logged today
+          <p className="text-[10px] text-slate-400 truncate">
+            {kpiMetrics.todayTradesCount} trade(s) logged today
           </p>
         </div>
 
         {/* Win Rate */}
-        <div className="rounded-card border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-slate-500">Win Rate</p>
-            <Award className="h-4 w-4 text-amber-500" />
+            <p className="text-[11px] font-medium text-slate-500">Win Rate</p>
+            <Award className="h-3.5 w-3.5 text-amber-500" />
           </div>
           {loading && !data ? (
-            <Skeleton className="mt-2 h-7 w-20" />
-          ) : data?.winRatePct !== null && data?.winRatePct !== undefined ? (
-            <p className="num mt-1 text-xl font-bold text-amber-600 md:text-2xl">
-              {data.winRatePct}%
+            <Skeleton className="mt-1 h-6 w-16" />
+          ) : kpiMetrics.winRatePct !== null ? (
+            <p className="num mt-0.5 text-lg font-bold text-amber-600 md:text-xl">
+              {kpiMetrics.winRatePct}%
             </p>
           ) : (
-            <p className="num mt-1 text-lg font-semibold text-slate-400">—</p>
+            <p className="num mt-0.5 text-lg font-semibold text-slate-400">—</p>
           )}
-          <p className="mt-1 text-xs text-slate-400">
-            {data?.winTrades ?? 0}W / {data?.lossTrades ?? 0}L
+          <p className="text-[10px] text-slate-400 truncate">
+            {kpiMetrics.winTrades}W / {kpiMetrics.lossTrades}L
           </p>
         </div>
 
         {/* Total Charges Paid */}
-        <div className="rounded-card border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-slate-500">Total Charges</p>
-            <Receipt className="h-4 w-4 text-slate-400" />
+            <p className="text-[11px] font-medium text-slate-500">Total Charges</p>
+            <Receipt className="h-3.5 w-3.5 text-slate-400" />
           </div>
           {loading && !data ? (
-            <Skeleton className="mt-2 h-7 w-24" />
-          ) : data ? (
-            <p className="num mt-1 text-xl font-bold text-slate-800 md:text-2xl">
-              {formatINR(data.totalChargesPaise)}
-            </p>
+            <Skeleton className="mt-1 h-6 w-20" />
           ) : (
-            <p className="num mt-1 text-lg font-semibold text-slate-400">—</p>
+            <p className="num mt-0.5 text-lg font-bold text-slate-800 md:text-xl">
+              {formatINR(kpiMetrics.chargesPaise)}
+            </p>
           )}
-          <p className="mt-1 text-xs text-slate-400">Brokerage & taxes</p>
+          <p className="text-[10px] text-slate-400 truncate">Brokerage & taxes</p>
         </div>
 
         {/* Total Trades */}
-        <div className="rounded-card border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium text-slate-500">Total Trades</p>
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+          <p className="text-[11px] font-medium text-slate-500">Total Trades</p>
           {loading && !data ? (
-            <Skeleton className="mt-2 h-7 w-16" />
+            <Skeleton className="mt-1 h-6 w-14" />
           ) : (
-            <p className="num mt-1 text-xl font-bold text-slate-900 md:text-2xl">
-              {data?.totalTrades ?? 0}
+            <p className="num mt-0.5 text-lg font-bold text-slate-900 md:text-xl">
+              {kpiMetrics.tradesCount}
             </p>
           )}
-          <p className="mt-1 text-xs text-slate-400">Completed trades</p>
+          <p className="text-[10px] text-slate-400 truncate">
+            {selectedYear !== null ||
+            dateFilter !== "all" ||
+            segmentFilter !== "all" ||
+            instrumentFilter !== "all" ||
+            outcomeFilter !== "all" ||
+            search.trim()
+              ? "In filtered view"
+              : "Completed trades"}
+          </p>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-        <div className="relative min-w-[14rem] flex-1">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2.5 rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs shrink-0">
+        <div className="relative min-w-[14rem] flex-1 flex items-center">
+          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
             type="search"
             placeholder="Search symbol, strike, or note..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 text-sm focus:border-brand-500 focus:bg-white focus:outline-none"
+            className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-3 text-xs md:text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none transition-colors"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="flex items-center gap-1 font-medium text-slate-500">
-            <Filter className="h-3.5 w-3.5" />
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+            <Filter className="h-3.5 w-3.5 text-slate-400" />
             Filter:
           </span>
 
@@ -349,7 +439,7 @@ export function FnoView() {
           <select
             value={segmentFilter}
             onChange={(e) => setSegmentFilter(e.target.value)}
-            className="h-8 rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-700 focus:outline-none"
+            className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 focus:border-brand-500 focus:outline-none transition-colors cursor-pointer"
           >
             <option value="all">All Segments</option>
             <option value="equity">Equity / Index F&O</option>
@@ -360,7 +450,7 @@ export function FnoView() {
           <select
             value={instrumentFilter}
             onChange={(e) => setInstrumentFilter(e.target.value)}
-            className="h-8 rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-700 focus:outline-none"
+            className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 focus:border-brand-500 focus:outline-none transition-colors cursor-pointer"
           >
             <option value="all">All Instruments</option>
             <option value="call">Call (CE)</option>
@@ -372,7 +462,7 @@ export function FnoView() {
           <select
             value={outcomeFilter}
             onChange={(e) => setOutcomeFilter(e.target.value)}
-            className="h-8 rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-700 focus:outline-none"
+            className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 focus:border-brand-500 focus:outline-none transition-colors cursor-pointer"
           >
             <option value="all">All Outcomes</option>
             <option value="profit">Profitable Only</option>
@@ -382,19 +472,40 @@ export function FnoView() {
           {/* Date Filter */}
           <select
             value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className="h-8 rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-700 focus:outline-none"
+            onChange={(e) => {
+              const val = e.target.value;
+              setDateFilter(val);
+              if (val === "today" || val === "week" || val === "month" || val === "year") {
+                if (selectedYear !== null && selectedYear !== new Date().getFullYear()) {
+                  setSelectedYear(null);
+                }
+              }
+            }}
+            className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 focus:border-brand-500 focus:outline-none transition-colors cursor-pointer"
           >
             <option value="all">All Time</option>
             <option value="today">Today Only</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+            <option value="year">This Year</option>
           </select>
         </div>
       </div>
 
-      {/* Trades Journal Table */}
-      <div>
-        <h2 className="mb-3 text-sm font-semibold text-slate-700">Daily Trade Log</h2>
+      {/* Daily Trade Log Header Bar */}
+      <div className="mb-2 flex items-center justify-between shrink-0">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700">Daily Trade Log</h2>
+        <Link
+          href="/income"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition"
+        >
+          <IndianRupee className="h-3.5 w-3.5 text-slate-600" />
+          <span>View Income</span>
+        </Link>
+      </div>
 
+      {/* Trades Journal Table */}
+      <div className="flex-1 min-h-0 flex flex-col">
         {loading && (data?.trades.length ?? 0) === 0 ? (
           <div className="space-y-2">
             <Skeleton className="h-16 w-full" />
@@ -421,21 +532,21 @@ export function FnoView() {
             No trades match the selected filters.
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-card border border-slate-200 bg-white shadow-sm">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-slate-600">
+          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto rounded-card border border-slate-200 bg-white shadow-sm">
+            <table className="w-full text-left text-xs md:text-sm">
+              <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50 text-slate-600 shadow-xs">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Date</th>
-                  <th className="px-4 py-3 font-medium">Instrument</th>
-                  <th className="px-4 py-3 text-right font-medium">Qty</th>
-                  <th className="px-4 py-3 text-right font-medium">Buy Price</th>
-                  <th className="px-4 py-3 text-right font-medium">Sell Price</th>
-                  <th className="px-4 py-3 text-right font-medium">Charges</th>
-                  <th className="px-4 py-3 text-right font-medium">Gross P&L</th>
-                  <th className="px-4 py-3 text-right font-medium">Net P&L</th>
-                  <th className="px-4 py-3 font-medium">Note / Account</th>
-                  <th className="px-4 py-3 text-right font-medium">
-                    <span className="sr-only">Actions</span>
+                  <th className="px-2.5 py-2 font-medium whitespace-nowrap">Date</th>
+                  <th className="px-2.5 py-2 font-medium">Instrument</th>
+                  <th className="px-2 py-2 text-right font-medium whitespace-nowrap">Qty</th>
+                  <th className="px-2 py-2 text-right font-medium whitespace-nowrap">Buy Price</th>
+                  <th className="px-2 py-2 text-right font-medium whitespace-nowrap">Sell Price</th>
+                  <th className="px-2 py-2 text-right font-medium whitespace-nowrap">Charges</th>
+                  <th className="px-2 py-2 text-right font-medium whitespace-nowrap">Gross P&L</th>
+                  <th className="px-2.5 py-2 text-right font-medium whitespace-nowrap">Net P&L</th>
+                  <th className="px-2.5 py-2 font-medium">Note / Account</th>
+                  <th className="px-3 py-2 text-right font-medium whitespace-nowrap">
+                    Action
                   </th>
                 </tr>
               </thead>
@@ -450,15 +561,15 @@ export function FnoView() {
                       : null;
 
                   return (
-                    <tr key={t.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="num whitespace-nowrap px-4 py-3 text-slate-600">
+                    <tr key={t.id} className="group hover:bg-slate-50 transition-colors">
+                      <td className="num whitespace-nowrap px-2.5 py-1.5 text-xs text-slate-600">
                         {displayDate(t.occurred_on)}
                       </td>
 
-                      <td className="whitespace-nowrap px-4 py-3">
-                        <div className="flex items-center gap-2">
+                      <td className="whitespace-nowrap px-2.5 py-1.5">
+                        <div className="flex items-center gap-1.5">
                           <span
-                            className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] font-bold uppercase ${
+                            className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${
                               t.instrument_type === "call"
                                 ? "bg-emerald-100 text-emerald-800"
                                 : t.instrument_type === "put"
@@ -478,25 +589,23 @@ export function FnoView() {
                               ? "PE"
                               : "FUT"}
                           </span>
-                          <div>
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-bold text-slate-900">{t.symbol}</span>
-                              {t.strike_price_paise && (
-                                <span className="num font-semibold text-slate-700">
-                                  {Math.floor(t.strike_price_paise / 100)}
-                                </span>
-                              )}
-                              {resolveFnoSegment(t.symbol, t.segment) === "commodity" && (
-                                <span className="rounded bg-amber-100 px-1 py-0.2 text-[10px] font-semibold text-amber-800">
-                                  MCX
-                                </span>
-                              )}
-                            </div>
+                          <div className="flex items-center gap-1">
+                            <span className="font-bold text-slate-900">{t.symbol}</span>
+                            {t.strike_price_paise && (
+                              <span className="num font-semibold text-slate-700">
+                                {Math.floor(t.strike_price_paise / 100)}
+                              </span>
+                            )}
+                            {resolveFnoSegment(t.symbol, t.segment) === "commodity" && (
+                              <span className="rounded bg-amber-100 px-1 py-0.2 text-[9px] font-semibold text-amber-800">
+                                MCX
+                              </span>
+                            )}
                           </div>
                         </div>
                       </td>
 
-                      <td className="num whitespace-nowrap px-4 py-3 text-right font-medium text-slate-700">
+                      <td className="num whitespace-nowrap px-2 py-1.5 text-right font-medium text-slate-700">
                         <div>{t.quantity}</div>
                         {t.lots && (
                           <div className="text-[10px] text-slate-400">
@@ -505,25 +614,25 @@ export function FnoView() {
                         )}
                       </td>
 
-                      <td className="num whitespace-nowrap px-4 py-3 text-right text-slate-600">
+                      <td className="num whitespace-nowrap px-2 py-1.5 text-right text-slate-600">
                         {formatINR(t.buy_price_paise)}
                       </td>
 
-                      <td className="num whitespace-nowrap px-4 py-3 text-right text-slate-600">
+                      <td className="num whitespace-nowrap px-2 py-1.5 text-right text-slate-600">
                         {formatINR(t.sell_price_paise)}
                       </td>
 
-                      <td className="num whitespace-nowrap px-4 py-3 text-right text-slate-500">
+                      <td className="num whitespace-nowrap px-2 py-1.5 text-right text-slate-500">
                         {t.charges_paise > 0 ? `-${formatINR(t.charges_paise)}` : "₹0.00"}
                       </td>
 
-                      <td className="num whitespace-nowrap px-4 py-3 text-right text-slate-600">
+                      <td className="num whitespace-nowrap px-2 py-1.5 text-right text-slate-600">
                         {t.gross_pnl_paise >= 0
                           ? `+${formatINR(t.gross_pnl_paise)}`
                           : formatINR(t.gross_pnl_paise)}
                       </td>
 
-                      <td className="num whitespace-nowrap px-4 py-3 text-right">
+                      <td className="num whitespace-nowrap px-2.5 py-1.5 text-right">
                         <div
                           className={`inline-flex items-center gap-1 font-bold ${
                             isProfit
@@ -539,7 +648,7 @@ export function FnoView() {
                         </div>
                         {roiPct !== null && (
                           <div
-                            className={`num text-[11px] font-medium ${
+                            className={`num text-[10px] font-medium ${
                               roiPct > 0
                                 ? "text-emerald-600"
                                 : roiPct < 0
@@ -552,33 +661,35 @@ export function FnoView() {
                         )}
                       </td>
 
-                      <td className="max-w-[14rem] truncate px-4 py-3 text-xs text-slate-500">
-                        <div>{t.note || "—"}</div>
+                      <td className="max-w-[8rem] md:max-w-[11rem] truncate px-2.5 py-1.5 text-xs text-slate-500">
+                        <div className="truncate">{t.note || "—"}</div>
                         {t.account?.name && (
-                          <span className="text-[11px] text-slate-400">
+                          <span className="text-[10px] text-slate-400">
                             via {t.account.name}
                           </span>
                         )}
                       </td>
 
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex justify-end gap-1">
+                      <td className="px-3 py-1.5 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => {
                               setEditingTrade(t);
                               setFormOpen(true);
                             }}
-                            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-900"
+                            className="rounded-md p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-900 transition"
+                            title="Edit trade"
                             aria-label={`Edit trade for ${t.symbol}`}
                           >
-                            <Pencil className="h-4 w-4" />
+                            <Pencil className="h-3.5 w-3.5" />
                           </button>
                           <button
                             onClick={() => setDeleteTarget(t)}
-                            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-red-600"
+                            className="rounded-md p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition"
+                            title="Delete trade"
                             aria-label={`Delete trade for ${t.symbol}`}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       </td>
@@ -618,6 +729,6 @@ export function FnoView() {
         onConfirm={() => void handleDelete()}
         onClose={() => setDeleteTarget(null)}
       />
-    </>
+    </div>
   );
 }

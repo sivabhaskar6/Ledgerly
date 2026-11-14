@@ -5,7 +5,6 @@ import {
   Wallet,
   Calendar,
   TrendingUp,
-  TrendingDown,
   ArrowUpRight,
   ArrowDownRight,
   RefreshCw,
@@ -17,7 +16,6 @@ import {
   ChevronUp,
   Percent,
 } from "lucide-react";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
@@ -56,181 +54,129 @@ export function SavingsView() {
   const currentYear = useMemo(() => new Date().getFullYear(), []);
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col flex-1 min-h-0">
       {/* Top Header */}
-      <PageHeader
-        title="Savings"
-        description="Consolidated monthly savings after expenses, F&O trading, and IPO gains."
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Year Filter */}
-            {data && data.availableYears.length > 0 && (
-              <div className="flex items-center rounded-lg border border-slate-200 bg-white p-1 text-xs">
+      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900">Savings</h1>
+          <p className="mt-0.5 text-xs text-slate-500">
+            Consolidated monthly savings after expenses, F&O trading, and IPO gains.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {/* Year Filter */}
+          {data && data.availableYears.length > 0 && (
+            <div className="flex items-center rounded-lg border border-slate-200 bg-white p-0.5 text-xs shadow-xs">
+              <button
+                onClick={() => setSelectedYear(null)}
+                className={`rounded-md px-2 py-0.5 font-medium transition ${
+                  selectedYear === null
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                All Years
+              </button>
+              {data.availableYears.map((yr) => (
                 <button
-                  onClick={() => setSelectedYear(null)}
-                  className={`rounded-md px-2.5 py-1 font-medium transition ${
-                    selectedYear === null
+                  key={yr}
+                  onClick={() => setSelectedYear(yr)}
+                  className={`rounded-md px-2 py-0.5 font-medium transition ${
+                    selectedYear === yr
                       ? "bg-slate-900 text-white"
                       : "text-slate-600 hover:bg-slate-100"
                   }`}
                 >
-                  All Years
+                  {yr}
                 </button>
-                {data.availableYears.map((yr) => (
-                  <button
-                    key={yr}
-                    onClick={() => setSelectedYear(yr)}
-                    className={`rounded-md px-2.5 py-1 font-medium transition ${
-                      selectedYear === yr
-                        ? "bg-slate-900 text-white"
-                        : "text-slate-600 hover:bg-slate-100"
-                    }`}
-                  >
-                    {yr}
-                  </button>
-                ))}
-              </div>
-            )}
+              ))}
+            </div>
+          )}
 
-            <Button
-              variant="secondary"
-              onClick={() => void loadData()}
-              loading={loading}
-              className="h-8 gap-1.5 px-3 text-xs"
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              Refresh
-            </Button>
-          </div>
-        }
-      />
+          <Button
+            variant="secondary"
+            onClick={() => void loadData()}
+            loading={loading}
+            className="h-9 px-3 text-xs font-medium shadow-xs"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Refresh
+          </Button>
+        </div>
+      </div>
 
       {/* KPI Cards */}
-      {loading && !data ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Skeleton className="h-28 rounded-card" />
-          <Skeleton className="h-28 rounded-card" />
-          <Skeleton className="h-28 rounded-card" />
-          <Skeleton className="h-28 rounded-card" />
+      <div className="mb-2 grid grid-cols-2 gap-2 sm:grid-cols-2 lg:grid-cols-4 shrink-0">
+        {/* 1. All-Time Cumulative Savings */}
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-medium text-slate-500">Current Total Savings</span>
+            <Wallet className="h-3.5 w-3.5 text-slate-400" />
+          </div>
+          <div
+            className={`num mt-0.5 text-lg font-bold md:text-xl ${
+              (data?.allTimeSavingsPaise ?? 0) >= 0 ? "text-emerald-700" : "text-rose-700"
+            }`}
+          >
+            {loading && !data ? <Skeleton className="h-6 w-20" /> : formatINR(data?.allTimeSavingsPaise ?? 0)}
+          </div>
+          <p className="text-[10px] text-slate-400 truncate">Total accumulated till now</p>
         </div>
-      ) : data ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {/* 1. All-Time Cumulative Savings */}
-          <div className="rounded-card border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-slate-500">Current Total Savings</span>
-              <div
-                className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-                  data.allTimeSavingsPaise >= 0
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "bg-rose-50 text-rose-700"
-                }`}
-              >
-                <Wallet className="h-5 w-5" />
-              </div>
-            </div>
-            <div
-              className={`mt-2 text-2xl font-bold tracking-tight ${
-                data.allTimeSavingsPaise >= 0 ? "text-emerald-700" : "text-rose-700"
-              }`}
-            >
-              {formatINR(data.allTimeSavingsPaise)}
-            </div>
-            <div className="mt-1 flex items-center gap-1 text-xs text-slate-500">
-              {data.allTimeSavingsPaise >= 0 ? (
-                <span className="inline-flex items-center text-emerald-600 font-medium">
-                  <TrendingUp className="mr-0.5 h-3.5 w-3.5" /> Net Surplus
-                </span>
-              ) : (
-                <span className="inline-flex items-center text-rose-600 font-medium">
-                  <TrendingDown className="mr-0.5 h-3.5 w-3.5" /> Net Deficit
-                </span>
-              )}
-              <span>• Total accumulated till now</span>
-            </div>
-          </div>
 
-          {/* 2. This Month's Savings */}
-          <div className="rounded-card border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-slate-500">This Month&apos;s Savings</span>
-              <div
-                className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-                  data.currentMonthSavingsPaise >= 0
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "bg-rose-50 text-rose-700"
-                }`}
-              >
-                <Calendar className="h-5 w-5" />
-              </div>
-            </div>
-            <div
-              className={`mt-2 text-2xl font-bold tracking-tight ${
-                data.currentMonthSavingsPaise >= 0 ? "text-emerald-700" : "text-rose-700"
-              }`}
-            >
-              {formatINR(data.currentMonthSavingsPaise)}
-            </div>
-            <div className="mt-1 text-xs text-slate-500">
-              Income − Expenses ± F&O & IPO
-            </div>
+        {/* 2. This Month's Savings */}
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-medium text-slate-500">This Month&apos;s Savings</span>
+            <Calendar className="h-3.5 w-3.5 text-slate-400" />
           </div>
-
-          {/* 3. Current Year (YTD) Savings */}
-          <div className="rounded-card border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-slate-500">{currentYear} YTD Savings</span>
-              <div
-                className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-                  data.currentYearSavingsPaise >= 0
-                    ? "bg-brand-50 text-brand-700"
-                    : "bg-amber-50 text-amber-700"
-                }`}
-              >
-                <TrendingUp className="h-5 w-5" />
-              </div>
-            </div>
-            <div
-              className={`mt-2 text-2xl font-bold tracking-tight ${
-                data.currentYearSavingsPaise >= 0 ? "text-slate-900" : "text-rose-700"
-              }`}
-            >
-              {formatINR(data.currentYearSavingsPaise)}
-            </div>
-            <div className="mt-1 text-xs text-slate-500">
-              Cumulative saved in {currentYear}
-            </div>
+          <div
+            className={`num mt-0.5 text-lg font-bold md:text-xl ${
+              (data?.currentMonthSavingsPaise ?? 0) >= 0 ? "text-emerald-700" : "text-rose-700"
+            }`}
+          >
+            {loading && !data ? <Skeleton className="h-6 w-20" /> : formatINR(data?.currentMonthSavingsPaise ?? 0)}
           </div>
-
-          {/* 4. Overall Inflow vs Outflow */}
-          <div className="rounded-card border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-slate-500">All-Time Expenses</span>
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
-                <Receipt className="h-5 w-5" />
-              </div>
-            </div>
-            <div className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
-              {formatINR(data.allTimeExpensePaise)}
-            </div>
-            <div className="mt-1 text-xs text-slate-500">
-              Total lifetime expenses minimized
-            </div>
-          </div>
+          <p className="text-[10px] text-slate-400 truncate">Income − Expenses ± F&O & IPO</p>
         </div>
-      ) : null}
+
+        {/* 3. Current Year (YTD) Savings */}
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-medium text-slate-500">{currentYear} YTD Savings</span>
+            <TrendingUp className="h-3.5 w-3.5 text-slate-400" />
+          </div>
+          <div
+            className={`num mt-0.5 text-lg font-bold md:text-xl ${
+              (data?.currentYearSavingsPaise ?? 0) >= 0 ? "text-slate-900" : "text-rose-700"
+            }`}
+          >
+            {loading && !data ? <Skeleton className="h-6 w-20" /> : formatINR(data?.currentYearSavingsPaise ?? 0)}
+          </div>
+          <p className="text-[10px] text-slate-400 truncate">Cumulative saved in {currentYear}</p>
+        </div>
+
+        {/* 4. Overall Inflow vs Outflow */}
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-medium text-slate-500">All-Time Expenses</span>
+            <Receipt className="h-3.5 w-3.5 text-slate-400" />
+          </div>
+          <div className="num mt-0.5 text-lg font-bold md:text-xl text-slate-900">
+            {loading && !data ? <Skeleton className="h-6 w-20" /> : formatINR(data?.allTimeExpensePaise ?? 0)}
+          </div>
+          <p className="text-[10px] text-slate-400 truncate">Total lifetime expenses</p>
+        </div>
+      </div>
 
       {/* Month-by-Month Savings Ledger */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-base font-semibold text-slate-900">
-              Monthly Savings Records
-            </h2>
-            <p className="text-xs text-slate-500">
-              One record per entire month showing income, expenses, F&O trading, IPO gains, and cumulative savings.
-            </p>
-          </div>
+      <div className="flex-1 min-h-0 flex flex-col">
+        <div className="mb-1.5 flex items-center justify-between shrink-0">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+            Monthly Savings Records
+          </h2>
+          <p className="text-[11px] text-slate-400">
+            One record per entire month showing income, expenses, F&O trading, IPO gains, and cumulative savings.
+          </p>
         </div>
 
         {data && data.records.length === 0 ? (
@@ -242,7 +188,7 @@ export function SavingsView() {
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="flex-1 min-h-0 overflow-y-auto space-y-2.5 pr-1">
             {data?.records.map((record) => {
               const isExpanded = Boolean(expandedMonths[record.monthKey]);
               const isPositive = record.netSavingsPaise >= 0;

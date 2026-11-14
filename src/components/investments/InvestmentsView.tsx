@@ -8,7 +8,6 @@ import { errorMessage } from "@/lib/data/expenses";
 import { formatINR } from "@/lib/utils/money";
 import { displayDate } from "@/lib/utils/dates";
 import type { Account, Investment, InvestmentWithRefs } from "@/types/db";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -78,22 +77,22 @@ export function InvestmentsView() {
   const ipoTrades = data?.trades.filter((t) => t.trade_type === "ipo_apply" || t.trade_type === "ipo_refund" || t.trade_type === "ipo_allotment") ?? [];
 
   return (
-    <>
-      <PageHeader
-        title="Investments & Capital"
-        description="Track stocks, mutual funds, and IPO movements separately from everyday spending."
-        actions={
-          <Button onClick={() => { setEditingTrade(null); setTradeModalOpen(true); }}>
-            <Plus className="h-4 w-4" aria-hidden />
-            Record trade
-          </Button>
-        }
-      />
+    <div className="flex flex-col flex-1 min-h-0">
+      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900">Investments & Capital</h1>
+          <p className="mt-0.5 text-xs text-slate-500">Track stocks, mutual funds, and IPO movements separately from everyday spending.</p>
+        </div>
+        <Button onClick={() => { setEditingTrade(null); setTradeModalOpen(true); }} className="h-9 px-3.5 text-xs font-semibold shadow-xs">
+          <Plus className="h-4 w-4" aria-hidden />
+          Record trade
+        </Button>
+      </div>
 
       {data?.tableMissing && (
-        <div role="alert" className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
+        <div role="alert" className="mb-2.5 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800 shrink-0">
           <p className="font-semibold">Setup Required: Run Database Migration</p>
-          <p className="mt-1">
+          <p className="mt-0.5">
             The <code className="rounded bg-amber-100 px-1 py-0.5 text-xs font-mono">investments</code> table is not yet created in your Supabase project.
             Copy and paste the SQL from <code className="rounded bg-amber-100 px-1 py-0.5 text-xs font-mono">supabase/migrations/0004_accounts_investments_imports.sql</code> into your <strong>Supabase SQL Editor</strong> to enable investment tracking.
           </p>
@@ -101,97 +100,97 @@ export function InvestmentsView() {
       )}
 
       {error && (
-        <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div role="alert" className="mb-2.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs text-red-700 shrink-0">
           {error} <button className="underline" onClick={() => void load()}>Try again</button>
         </div>
       )}
 
       {/* Financial Summary Cards */}
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-card border border-slate-200 bg-white p-4">
-          <p className="text-xs font-medium text-slate-500">Invested Capital</p>
+      <div className="mb-2 grid grid-cols-2 gap-2 sm:grid-cols-4 shrink-0">
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+          <p className="text-[11px] font-medium text-slate-500">Invested Capital</p>
           {loading && !data ? (
-            <Skeleton className="mt-2 h-7 w-24" />
+            <Skeleton className="mt-1 h-6 w-24" />
           ) : (
-            <p className="num mt-1 text-xl font-semibold text-slate-900">
+            <p className="num mt-0.5 text-lg font-bold md:text-xl text-slate-900">
               {formatINR(data?.totalInvestedPaise ?? 0)}
             </p>
           )}
-          <p className="mt-1 text-xs text-slate-400">Total cost basis of holdings</p>
+          <p className="text-[10px] text-slate-400 truncate">Total cost basis of holdings</p>
         </div>
 
-        <div className="rounded-card border border-slate-200 bg-white p-4">
-          <p className="text-xs font-medium text-slate-500">Current Market Value</p>
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+          <p className="text-[11px] font-medium text-slate-500">Current Market Value</p>
           {loading && !data ? (
-            <Skeleton className="mt-2 h-7 w-24" />
+            <Skeleton className="mt-1 h-6 w-24" />
           ) : data?.totalMarketValuePaise !== null ? (
-            <p className="num mt-1 text-xl font-semibold text-indigo-700">
+            <p className="num mt-0.5 text-lg font-bold md:text-xl text-indigo-700">
               {formatINR(data?.totalMarketValuePaise ?? 0)}
             </p>
           ) : (
-            <div className="mt-1 flex items-center gap-1.5 text-amber-600">
-              <span className="text-sm font-semibold">Unconfigured</span>
-              <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">Set prices</span>
+            <div className="mt-0.5 flex items-center gap-1.5 text-amber-600">
+              <span className="text-xs font-semibold">Unconfigured</span>
+              <span className="rounded bg-amber-50 px-1 py-0.5 text-[10px] font-medium text-amber-700">Set prices</span>
             </div>
           )}
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="text-[10px] text-slate-400 truncate">
             {data?.hasUnconfiguredPrices ? "Configure market prices below" : "Live portfolio valuation"}
           </p>
         </div>
 
-        <div className="rounded-card border border-slate-200 bg-white p-4">
-          <p className="text-xs font-medium text-slate-500">Realized P&L</p>
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+          <p className="text-[11px] font-medium text-slate-500">Realized P&L</p>
           {loading && !data ? (
-            <Skeleton className="mt-2 h-7 w-24" />
+            <Skeleton className="mt-1 h-6 w-24" />
           ) : (
-            <div className="mt-1 flex items-center gap-1">
+            <div className="mt-0.5 flex items-center gap-1">
               {(data?.totalRealizedGainPaise ?? 0) >= 0 ? (
-                <TrendingUp className="h-4 w-4 text-emerald-600" />
+                <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
               ) : (
-                <TrendingDown className="h-4 w-4 text-red-600" />
+                <TrendingDown className="h-3.5 w-3.5 text-red-600" />
               )}
-              <p className={`num text-xl font-semibold ${(data?.totalRealizedGainPaise ?? 0) >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+              <p className={`num text-lg font-bold md:text-xl ${(data?.totalRealizedGainPaise ?? 0) >= 0 ? "text-emerald-700" : "text-red-600"}`}>
                 {formatINR(data?.totalRealizedGainPaise ?? 0)}
               </p>
             </div>
           )}
-          <p className="mt-1 text-xs text-slate-400">Net booked gain from sales</p>
+          <p className="text-[10px] text-slate-400 truncate">Net booked gain from sales</p>
         </div>
 
-        <div className="rounded-card border border-slate-200 bg-white p-4">
-          <p className="text-xs font-medium text-slate-500">IPO Blocked Funds</p>
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+          <p className="text-[11px] font-medium text-slate-500">IPO Blocked Funds</p>
           {loading && !data ? (
-            <Skeleton className="mt-2 h-7 w-24" />
+            <Skeleton className="mt-1 h-6 w-24" />
           ) : (
-            <div className="mt-1 flex items-center gap-1">
-              <Clock className="h-4 w-4 text-amber-500" />
-              <p className="num text-xl font-semibold text-amber-700">
+            <div className="mt-0.5 flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5 text-amber-500" />
+              <p className="num text-lg font-bold md:text-xl text-amber-700">
                 {formatINR(data?.totalIpoBlockedPaise ?? 0)}
               </p>
             </div>
           )}
-          <p className="mt-1 text-xs text-slate-400">Escrow / capital movements</p>
+          <p className="text-[10px] text-slate-400 truncate">Escrow / capital movements</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="mb-4 border-b border-slate-200">
-        <nav className="-mb-px flex gap-6" aria-label="Investment tabs">
+      <div className="mb-2 border-b border-slate-200 shrink-0">
+        <nav className="-mb-px flex gap-4 text-xs font-medium" aria-label="Investment tabs">
           <button
             onClick={() => setTab("holdings")}
-            className={`pb-3 text-sm font-medium transition-colors ${tab === "holdings" ? "border-b-2 border-brand-600 text-brand-700" : "text-slate-500 hover:text-slate-700"}`}
+            className={`pb-2 transition-colors ${tab === "holdings" ? "border-b-2 border-brand-600 text-brand-700 font-semibold" : "text-slate-500 hover:text-slate-700"}`}
           >
             Holdings ({data?.holdings.filter((h) => h.netQuantity > 0).length ?? 0})
           </button>
           <button
             onClick={() => setTab("trades")}
-            className={`pb-3 text-sm font-medium transition-colors ${tab === "trades" ? "border-b-2 border-brand-600 text-brand-700" : "text-slate-500 hover:text-slate-700"}`}
+            className={`pb-2 transition-colors ${tab === "trades" ? "border-b-2 border-brand-600 text-brand-700 font-semibold" : "text-slate-500 hover:text-slate-700"}`}
           >
             Trade Journal ({data?.trades.length ?? 0})
           </button>
           <button
             onClick={() => setTab("ipo")}
-            className={`pb-3 text-sm font-medium transition-colors ${tab === "ipo" ? "border-b-2 border-brand-600 text-brand-700" : "text-slate-500 hover:text-slate-700"}`}
+            className={`pb-2 transition-colors ${tab === "ipo" ? "border-b-2 border-brand-600 text-brand-700 font-semibold" : "text-slate-500 hover:text-slate-700"}`}
           >
             IPO Applications ({ipoTrades.length})
           </button>
@@ -200,7 +199,7 @@ export function InvestmentsView() {
 
       {/* Tab Content: Holdings */}
       {tab === "holdings" && (
-        <div>
+        <div className="flex-1 min-h-0 flex flex-col">
           {loading && !data ? (
             <div className="space-y-2">
               <Skeleton className="h-12 w-full" />
@@ -211,65 +210,65 @@ export function InvestmentsView() {
               title="No active holdings"
               body="Record your stock or mutual fund purchases to see positions, cost basis, and returns."
               action={
-                <Button onClick={() => { setEditingTrade(null); setTradeModalOpen(true); }}>
+                <Button onClick={() => { setEditingTrade(null); setTradeModalOpen(true); }} className="h-9 px-3.5 text-xs font-semibold shadow-xs">
                   <Plus className="h-4 w-4" aria-hidden />Record first trade
                 </Button>
               }
             />
           ) : (
-            <div className="overflow-x-auto rounded-card border border-slate-200 bg-white">
-              <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-slate-600">
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto rounded-card border border-slate-200 bg-white shadow-sm">
+              <table className="w-full text-left text-xs md:text-sm">
+                <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50 text-slate-600 text-xs font-semibold shadow-xs">
                   <tr>
-                    <th className="px-4 py-3 font-medium">Symbol & Name</th>
-                    <th className="px-4 py-3 font-medium">Type</th>
-                    <th className="px-4 py-3 text-right font-medium">Quantity</th>
-                    <th className="px-4 py-3 text-right font-medium">Avg Buy Price</th>
-                    <th className="px-4 py-3 text-right font-medium">Cost Basis</th>
-                    <th className="px-4 py-3 text-right font-medium">Market Price</th>
-                    <th className="px-4 py-3 text-right font-medium">Current Value</th>
-                    <th className="px-4 py-3 text-right font-medium">Unrealized P&L</th>
-                    <th className="px-4 py-3 text-right font-medium"><span className="sr-only">Actions</span></th>
+                    <th className="px-4 py-2 font-semibold">Symbol & Name</th>
+                    <th className="px-4 py-2 font-semibold">Type</th>
+                    <th className="px-4 py-2 text-right font-semibold">Quantity</th>
+                    <th className="px-4 py-2 text-right font-semibold">Avg Buy Price</th>
+                    <th className="px-4 py-2 text-right font-semibold">Cost Basis</th>
+                    <th className="px-4 py-2 text-right font-semibold">Market Price</th>
+                    <th className="px-4 py-2 text-right font-semibold">Current Value</th>
+                    <th className="px-4 py-2 text-right font-semibold">Unrealized P&L</th>
+                    <th className="px-4 py-2 text-right font-semibold"><span className="sr-only">Actions</span></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {data?.holdings.filter((h) => h.netQuantity > 0).map((h) => (
-                    <tr key={h.symbol} className="hover:bg-slate-50">
-                      <td className="px-4 py-3">
+                    <tr key={h.symbol} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-4 py-2">
                         <p className="font-semibold text-slate-900">{h.symbol}</p>
-                        <p className="text-xs text-slate-500">{h.name}</p>
+                        <p className="text-[11px] text-slate-500">{h.name}</p>
                       </td>
-                      <td className="px-4 py-3 text-xs text-slate-500 uppercase">{h.asset_type}</td>
-                      <td className="num px-4 py-3 text-right text-slate-700">{h.netQuantity}</td>
-                      <td className="num px-4 py-3 text-right text-slate-700">{formatINR(h.averageBuyPricePaise)}</td>
-                      <td className="num px-4 py-3 text-right font-medium text-slate-900">{formatINR(h.totalInvestedPaise)}</td>
-                      <td className="num px-4 py-3 text-right">
+                      <td className="px-4 py-2 text-[11px] text-slate-500 uppercase">{h.asset_type}</td>
+                      <td className="num px-4 py-2 text-right text-slate-700">{h.netQuantity}</td>
+                      <td className="num px-4 py-2 text-right text-slate-700">{formatINR(h.averageBuyPricePaise)}</td>
+                      <td className="num px-4 py-2 text-right font-medium text-slate-900">{formatINR(h.totalInvestedPaise)}</td>
+                      <td className="num px-4 py-2 text-right">
                         {h.currentPricePaise !== null ? (
                           formatINR(h.currentPricePaise)
                         ) : (
                           <span className="text-xs text-slate-400 italic">Unconfigured</span>
                         )}
                       </td>
-                      <td className="num px-4 py-3 text-right font-medium">
+                      <td className="num px-4 py-2 text-right font-medium">
                         {h.currentValuePaise !== null ? (
                           formatINR(h.currentValuePaise)
                         ) : (
                           <span className="text-xs text-slate-400 italic">—</span>
                         )}
                       </td>
-                      <td className="num px-4 py-3 text-right font-medium">
+                      <td className="num px-4 py-2 text-right font-medium">
                         {h.unrealizedGainPaise !== null ? (
-                          <span className={h.unrealizedGainPaise >= 0 ? "text-emerald-700" : "text-red-600"}>
+                          <span className={h.unrealizedGainPaise >= 0 ? "text-emerald-700 font-semibold" : "text-red-600 font-semibold"}>
                             {formatINR(h.unrealizedGainPaise)}
                           </span>
                         ) : (
                           <span className="text-xs text-slate-400 italic">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-2 text-right">
                         <button
                           onClick={() => setPriceModalHolding(h)}
-                          className="rounded-lg p-1.5 text-xs text-brand-700 hover:bg-slate-100"
+                          className="rounded-lg px-2 py-1 text-xs text-brand-700 hover:bg-slate-100 font-medium"
                         >
                           {h.currentPricePaise !== null ? "Edit price" : "Set price"}
                         </button>
@@ -285,55 +284,55 @@ export function InvestmentsView() {
 
       {/* Tab Content: Trades Journal */}
       {tab === "trades" && (
-        <div>
+        <div className="flex-1 min-h-0 flex flex-col">
           {(data?.trades.length ?? 0) === 0 ? (
             <EmptyState
               title="No trades recorded"
               body="Add stock purchases, sales, or IPO entries to populate your investment history."
             />
           ) : (
-            <div className="overflow-x-auto rounded-card border border-slate-200 bg-white">
-              <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-slate-600">
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto rounded-card border border-slate-200 bg-white shadow-sm">
+              <table className="w-full text-left text-xs md:text-sm">
+                <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50 text-slate-600 text-xs font-semibold shadow-xs">
                   <tr>
-                    <th className="px-4 py-3 font-medium">Date</th>
-                    <th className="px-4 py-3 font-medium">Action</th>
-                    <th className="px-4 py-3 font-medium">Symbol & Name</th>
-                    <th className="px-4 py-3 text-right font-medium">Qty</th>
-                    <th className="px-4 py-3 text-right font-medium">Price</th>
-                    <th className="px-4 py-3 text-right font-medium">Total Amount</th>
-                    <th className="px-4 py-3 font-medium">Account</th>
-                    <th className="px-4 py-3 text-right font-medium"><span className="sr-only">Actions</span></th>
+                    <th className="px-4 py-2 font-semibold">Date</th>
+                    <th className="px-4 py-2 font-semibold">Action</th>
+                    <th className="px-4 py-2 font-semibold">Symbol & Name</th>
+                    <th className="px-4 py-2 text-right font-semibold">Qty</th>
+                    <th className="px-4 py-2 text-right font-semibold">Price</th>
+                    <th className="px-4 py-2 text-right font-semibold">Total Amount</th>
+                    <th className="px-4 py-2 font-semibold">Account</th>
+                    <th className="px-4 py-2 text-right font-semibold"><span className="sr-only">Actions</span></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {data?.trades.map((t) => (
-                    <tr key={t.id} className="hover:bg-slate-50">
-                      <td className="num whitespace-nowrap px-4 py-3 text-slate-600">{displayDate(t.occurred_on)}</td>
-                      <td className="px-4 py-3">{tradeBadge(t.trade_type)}</td>
-                      <td className="px-4 py-3">
+                    <tr key={t.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="num whitespace-nowrap px-4 py-2 text-slate-600">{displayDate(t.occurred_on)}</td>
+                      <td className="px-4 py-2">{tradeBadge(t.trade_type)}</td>
+                      <td className="px-4 py-2">
                         <span className="font-semibold text-slate-900">{t.symbol}</span>
                         <span className="ml-2 text-xs text-slate-500">{t.name}</span>
                       </td>
-                      <td className="num px-4 py-3 text-right text-slate-700">{t.quantity}</td>
-                      <td className="num px-4 py-3 text-right text-slate-700">{formatINR(t.price_paise)}</td>
-                      <td className="num px-4 py-3 text-right font-semibold text-slate-900">{formatINR(t.amount_paise)}</td>
-                      <td className="px-4 py-3 text-xs text-slate-500">{t.account?.name ?? "—"}</td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="num px-4 py-2 text-right text-slate-700">{t.quantity}</td>
+                      <td className="num px-4 py-2 text-right text-slate-700">{formatINR(t.price_paise)}</td>
+                      <td className="num px-4 py-2 text-right font-semibold text-slate-900">{formatINR(t.amount_paise)}</td>
+                      <td className="px-4 py-2 text-xs text-slate-500">{t.account?.name ?? "—"}</td>
+                      <td className="px-4 py-2 text-right">
                         <div className="flex justify-end gap-1">
                           <button
                             onClick={() => { setEditingTrade(t); setTradeModalOpen(true); }}
-                            className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-900"
+                            className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
                             aria-label={`Edit ${t.symbol}`}
                           >
-                            <Pencil className="h-4 w-4" />
+                            <Pencil className="h-3.5 w-3.5" />
                           </button>
                           <button
                             onClick={() => setDeleteTarget(t)}
-                            className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-red-600"
+                            className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-red-600"
                             aria-label={`Delete ${t.symbol}`}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       </td>
@@ -348,49 +347,49 @@ export function InvestmentsView() {
 
       {/* Tab Content: IPO Applications */}
       {tab === "ipo" && (
-        <div>
+        <div className="flex-1 min-h-0 flex flex-col">
           {ipoTrades.length === 0 ? (
             <EmptyState
               title="No IPO applications"
               body="Record IPO applications to monitor blocked funds, allotments, and refunds without misclassifying them as everyday spending."
               action={
-                <Button onClick={() => { setEditingTrade(null); setTradeModalOpen(true); }}>
+                <Button onClick={() => { setEditingTrade(null); setTradeModalOpen(true); }} className="h-9 px-3.5 text-xs font-semibold shadow-xs">
                   <Plus className="h-4 w-4" aria-hidden />Apply for IPO
                 </Button>
               }
             />
           ) : (
-            <div className="overflow-x-auto rounded-card border border-slate-200 bg-white">
-              <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-slate-600">
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto rounded-card border border-slate-200 bg-white shadow-sm">
+              <table className="w-full text-left text-xs md:text-sm">
+                <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50 text-slate-600 text-xs font-semibold shadow-xs">
                   <tr>
-                    <th className="px-4 py-3 font-medium">Date</th>
-                    <th className="px-4 py-3 font-medium">Type</th>
-                    <th className="px-4 py-3 font-medium">IPO Company</th>
-                    <th className="px-4 py-3 text-right font-medium">Amount Blocked / Refunded</th>
-                    <th className="px-4 py-3 font-medium">Account</th>
-                    <th className="px-4 py-3 font-medium">Note</th>
-                    <th className="px-4 py-3 text-right font-medium"><span className="sr-only">Actions</span></th>
+                    <th className="px-4 py-2 font-semibold">Date</th>
+                    <th className="px-4 py-2 font-semibold">Type</th>
+                    <th className="px-4 py-2 font-semibold">IPO Company</th>
+                    <th className="px-4 py-2 text-right font-semibold">Amount Blocked / Refunded</th>
+                    <th className="px-4 py-2 font-semibold">Account</th>
+                    <th className="px-4 py-2 font-semibold">Note</th>
+                    <th className="px-4 py-2 text-right font-semibold"><span className="sr-only">Actions</span></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {ipoTrades.map((t) => (
-                    <tr key={t.id} className="hover:bg-slate-50">
-                      <td className="num whitespace-nowrap px-4 py-3 text-slate-600">{displayDate(t.occurred_on)}</td>
-                      <td className="px-4 py-3">{tradeBadge(t.trade_type)}</td>
-                      <td className="px-4 py-3">
+                    <tr key={t.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="num whitespace-nowrap px-4 py-2 text-slate-600">{displayDate(t.occurred_on)}</td>
+                      <td className="px-4 py-2">{tradeBadge(t.trade_type)}</td>
+                      <td className="px-4 py-2">
                         <span className="font-semibold text-slate-900">{t.symbol}</span>
                         <span className="ml-2 text-xs text-slate-500">{t.name}</span>
                       </td>
-                      <td className="num px-4 py-3 text-right font-semibold text-slate-900">{formatINR(t.amount_paise)}</td>
-                      <td className="px-4 py-3 text-xs text-slate-500">{t.account?.name ?? "—"}</td>
-                      <td className="max-w-[12rem] truncate px-4 py-3 text-xs text-slate-500">{t.note ?? "—"}</td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="num px-4 py-2 text-right font-semibold text-slate-900">{formatINR(t.amount_paise)}</td>
+                      <td className="px-4 py-2 text-xs text-slate-500">{t.account?.name ?? "—"}</td>
+                      <td className="max-w-[12rem] truncate px-4 py-2 text-xs text-slate-500">{t.note ?? "—"}</td>
+                      <td className="px-4 py-2 text-right">
                         <button
                           onClick={() => setDeleteTarget(t)}
-                          className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-red-600"
+                          className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-red-600"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </td>
                     </tr>
@@ -427,6 +426,6 @@ export function InvestmentsView() {
         onConfirm={() => void handleDeleteTrade()}
         onClose={() => setDeleteTarget(null)}
       />
-    </>
+    </div>
   );
 }

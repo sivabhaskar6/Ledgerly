@@ -150,4 +150,28 @@ export type IpoGainWithRefs = IpoGain & {
   account: { name: string } | null;
 };
 
+export type BorrowType = "lent" | "borrowed";
+export type BorrowStatus = "pending" | "settled";
+
+export type BorrowRecord = {
+  id: string;
+  account_id: string | null;
+  person_name: string;
+  type: BorrowType;
+  amount_paise: number;
+  occurred_on: string;
+  due_date: string | null;
+  status: BorrowStatus;
+  settled_on: string | null;
+  note: string | null;
+  deleted_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BorrowRecordWithRefs = BorrowRecord & {
+  account: { name: string } | null;
+};
+
+
 

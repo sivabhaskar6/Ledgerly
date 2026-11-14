@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { permanentlyDeleteExpense, restoreExpense } from "@/lib/data/expenses";
 
-export type DeletedItemKind = "expense" | "income" | "fno" | "ipo";
+export type DeletedItemKind = "expense" | "income" | "fno" | "ipo" | "borrowing";
 
 export type DeletedItem = {
   id: string;
@@ -198,6 +198,35 @@ export async function fetchRecentlyDeleted(db: SupabaseClient): Promise<DeletedI
     });
   }
 
+  // 6. Fetch soft-deleted Borrow records
+  try {
+    const { data: borrows, error: bErr } = await db
+      .from("borrow_records")
+      .select("id, person_name, type, amount_paise, occurred_on, deleted_at, note, account:accounts(name)")
+      .not("deleted_at", "is", null)
+      .order("deleted_at", { ascending: false });
+
+    if (!bErr && borrows) {
+      for (const b of borrows) {
+        const acc = b.account as unknown as { name?: string } | null;
+        const isLent = b.type === "lent";
+        items.push({
+          id: b.id,
+          kind: "borrowing",
+          title: `${isLent ? "Lent to" : "Borrowed from"} ${b.person_name}`,
+          amount_paise: Number(b.amount_paise),
+          occurred_on: b.occurred_on,
+          deleted_at: b.deleted_at || new Date().toISOString(),
+          badge: isLent ? "Lent (Given)" : "Borrowed (Taken)",
+          subtext: b.note || undefined,
+          account_name: acc?.name || null,
+        });
+      }
+    }
+  } catch {
+    // borrow_records table might not exist yet
+  }
+
   // Sort all deleted items by deleted_at descending
   items.sort((a, b) => b.deleted_at.localeCompare(a.deleted_at));
 
@@ -321,6 +350,18 @@ export async function restoreRecentlyDeleted(db: SupabaseClient, item: DeletedIt
       .eq("id", item.id)
       .not("deleted_at", "is", null);
     if (error) throw error;
+    return;
+  }
+
+  // Borrowing / Lending entry
+  if (item.kind === "borrowing") {
+    const { error } = await db
+      .from("borrow_records")
+      .update({ deleted_at: null })
+      .eq("id", item.id)
+      .not("deleted_at", "is", null);
+    if (error) throw error;
+    return;
   }
 }
 
@@ -395,6 +436,13 @@ export async function permanentlyDeleteRecentlyDeleted(db: SupabaseClient, item:
   // Regular Income entry
   if (item.kind === "income") {
     const { error } = await db.from("income").delete().eq("id", item.id);
+    if (error) throw error;
+    return;
+  }
+
+  // Borrowing / Lending entry
+  if (item.kind === "borrowing") {
+    const { error } = await db.from("borrow_records").delete().eq("id", item.id);
     if (error) throw error;
   }
 }

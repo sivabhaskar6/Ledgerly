@@ -1,13 +1,12 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { Plus, ArrowRightLeft, Archive, ArchiveRestore, Pencil, Landmark, Wallet, LineChart } from "lucide-react";
+import { Plus, ArrowRightLeft, Archive, ArchiveRestore, Pencil, Trash2, Landmark, Wallet, LineChart } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { archiveAccount, fetchAccountsWithBalances, fetchTransfers, unarchiveAccount, deleteTransfer } from "@/lib/data/accounts";
 import { errorMessage } from "@/lib/data/expenses";
 import { formatINR } from "@/lib/utils/money";
 import { displayDate } from "@/lib/utils/dates";
 import type { Account, AccountWithBalance, TransferWithRefs } from "@/types/db";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -108,217 +107,224 @@ export function AccountsView() {
   }
 
   return (
-    <>
-      <PageHeader
-        title="Accounts & Liquidity"
-        description="Monitor bank balances, cash in hand, and brokerage accounts."
-        actions={
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="secondary"
-              onClick={() => setTransferOpen(true)}
-              disabled={activeAccounts.length < 2}
-            >
-              <ArrowRightLeft className="h-4 w-4" aria-hidden />
-              Transfer money
-            </Button>
-            <Button onClick={() => { setEditing(null); setFormOpen(true); }}>
-              <Plus className="h-4 w-4" aria-hidden />
-              Add account
-            </Button>
-          </div>
-        }
-      />
+    <div className="flex flex-col flex-1 min-h-0">
+      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900">Accounts & Liquidity</h1>
+          <p className="mt-0.5 text-xs text-slate-500">Monitor bank balances, cash in hand, and brokerage accounts.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            onClick={() => setTransferOpen(true)}
+            disabled={activeAccounts.length < 2}
+            className="h-9 px-3 text-xs font-medium shadow-xs"
+          >
+            <ArrowRightLeft className="h-4 w-4" aria-hidden />
+            Transfer money
+          </Button>
+          <Button
+            onClick={() => { setEditing(null); setFormOpen(true); }}
+            className="h-9 px-3.5 text-xs font-semibold shadow-xs"
+          >
+            <Plus className="h-4 w-4" aria-hidden />
+            Add account
+          </Button>
+        </div>
+      </div>
 
       {error && (
-        <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div role="alert" className="mb-2.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs text-red-700 shrink-0">
           {error} <button className="underline" onClick={() => void load()}>Try again</button>
         </div>
       )}
 
       {/* Summary Cards */}
-      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="rounded-card border border-slate-200 bg-white p-4">
-          <p className="text-xs font-medium text-slate-500">Liquid Cash & Bank</p>
+      <div className="mb-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-3 shrink-0">
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+          <p className="text-[11px] font-medium text-slate-500">Liquid Cash & Bank</p>
           {loading && !data ? (
-            <Skeleton className="mt-2 h-7 w-28" />
+            <Skeleton className="mt-1 h-6 w-24" />
           ) : (
-            <p className="num mt-1 text-xl font-semibold text-slate-900">
+            <p className="num mt-0.5 text-lg font-bold md:text-xl text-slate-900">
               {formatINR(data?.totalLiquidPaise ?? 0)}
             </p>
           )}
-          <p className="mt-1 text-xs text-slate-400">Available across checking & cash</p>
+          <p className="text-[10px] text-slate-400 truncate">Available across checking & cash</p>
         </div>
 
-        <div className="rounded-card border border-slate-200 bg-white p-4">
-          <p className="text-xs font-medium text-slate-500">Brokerage & Demat</p>
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+          <p className="text-[11px] font-medium text-slate-500">Brokerage & Demat</p>
           {loading && !data ? (
-            <Skeleton className="mt-2 h-7 w-28" />
+            <Skeleton className="mt-1 h-6 w-24" />
           ) : (
-            <p className="num mt-1 text-xl font-semibold text-purple-700">
+            <p className="num mt-0.5 text-lg font-bold md:text-xl text-purple-700">
               {formatINR(data?.totalBrokeragePaise ?? 0)}
             </p>
           )}
-          <p className="mt-1 text-xs text-slate-400">Trading cash balance</p>
+          <p className="text-[10px] text-slate-400 truncate">Trading cash balance</p>
         </div>
 
-        <div className="rounded-card border border-slate-200 bg-white p-4">
-          <p className="text-xs font-medium text-slate-500">Net Liquid Balance</p>
+        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+          <p className="text-[11px] font-medium text-slate-500">Net Liquid Balance</p>
           {loading && !data ? (
-            <Skeleton className="mt-2 h-7 w-28" />
+            <Skeleton className="mt-1 h-6 w-24" />
           ) : (
-            <p className="num mt-1 text-xl font-semibold text-indigo-700">
+            <p className="num mt-0.5 text-lg font-bold md:text-xl text-indigo-700">
               {formatINR(data?.netWorthPaise ?? 0)}
             </p>
           )}
-          <p className="mt-1 text-xs text-slate-400">Total in all active accounts</p>
+          <p className="text-[10px] text-slate-400 truncate">Total in all active accounts</p>
         </div>
       </div>
 
-      {/* Accounts List */}
-      <div className="mb-8">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-700">Active Accounts ({activeAccounts.length})</h2>
-          {archivedAccounts.length > 0 && (
-            <button
-              onClick={() => setShowArchived((v) => !v)}
-              className="text-xs font-medium text-brand-700 hover:underline"
-            >
-              {showArchived ? "Hide archived accounts" : `Show archived (${archivedAccounts.length})`}
-            </button>
-          )}
-        </div>
-
-        {loading && activeAccounts.length === 0 ? (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((n) => (
-              <div key={n} className="rounded-card border border-slate-200 bg-white p-4">
-                <Skeleton className="h-6 w-32" />
-                <Skeleton className="mt-4 h-8 w-24" />
-              </div>
-            ))}
+      {/* Accounts & Transfers Scrollable Content */}
+      <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-1">
+        {/* Accounts List */}
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700">Active Accounts ({activeAccounts.length})</h2>
+            {archivedAccounts.length > 0 && (
+              <button
+                onClick={() => setShowArchived((v) => !v)}
+                className="text-xs font-medium text-brand-700 hover:underline"
+              >
+                {showArchived ? "Hide archived accounts" : `Show archived (${archivedAccounts.length})`}
+              </button>
+            )}
           </div>
-        ) : activeAccounts.length === 0 && !error ? (
-          <EmptyState
-            title="No accounts yet"
-            body="Add your bank accounts, cash wallets, or brokerage accounts to track balances accurately."
-            action={
-              <Button onClick={() => { setEditing(null); setFormOpen(true); }}>
-                <Plus className="h-4 w-4" aria-hidden />Add first account
-              </Button>
-            }
-          />
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {activeAccounts.map((a) => (
-              <div key={a.id} className="flex flex-col justify-between rounded-card border border-slate-200 bg-white p-4 shadow-sm">
-                <div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="rounded-lg bg-slate-100 p-2">{typeIcon(a.type)}</div>
-                      <span className="font-semibold text-slate-900">{a.name}</span>
-                    </div>
-                    {typeBadge(a.type)}
-                  </div>
-                  <div className="mt-4">
-                    <p className="text-xs text-slate-500">Current Balance</p>
-                    <p className="num text-2xl font-bold text-slate-900">{formatINR(a.current_balance_paise)}</p>
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-x-3 text-xs text-slate-400">
-                    <span>Opening: {formatINR(a.opening_balance_paise)}</span>
-                    <span>·</span>
-                    <span>{a.tx_count} {a.tx_count === 1 ? "entry" : "entries"}</span>
-                  </div>
-                </div>
 
-                <div className="mt-4 flex items-center justify-end gap-1 border-t border-slate-100 pt-3">
-                  <button
-                    onClick={() => { setEditing(a); setFormOpen(true); }}
-                    className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                    aria-label={`Edit ${a.name}`}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => setArchiveTarget(a)}
-                    className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-amber-600"
-                    aria-label={`Archive ${a.name}`}
-                  >
-                    <Archive className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Archived Accounts */}
-        {showArchived && archivedAccounts.length > 0 && (
-          <div className="mt-6 rounded-card border border-dashed border-slate-300 bg-slate-50/50 p-4">
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Archived Accounts</h3>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {archivedAccounts.map((a) => (
-                <div key={a.id} className="rounded-card border border-slate-200 bg-white p-3 opacity-75">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-slate-700">{a.name}</span>
-                    <button
-                      onClick={() => setArchiveTarget(a)}
-                      className="inline-flex items-center gap-1 text-xs text-brand-700 hover:underline"
-                    >
-                      <ArchiveRestore className="h-3.5 w-3.5" /> Restore
-                    </button>
-                  </div>
-                  <p className="num mt-2 font-semibold text-slate-600">{formatINR(a.current_balance_paise)}</p>
+          {loading && activeAccounts.length === 0 ? (
+            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((n) => (
+                <div key={n} className="rounded-xl border border-slate-200 bg-white p-3 shadow-xs">
+                  <Skeleton className="h-5 w-28" />
+                  <Skeleton className="mt-3 h-7 w-24" />
                 </div>
               ))}
             </div>
-          </div>
-        )}
-      </div>
+          ) : activeAccounts.length === 0 && !error ? (
+            <EmptyState
+              title="No accounts yet"
+              body="Add your bank accounts, cash wallets, or brokerage accounts to track balances accurately."
+              action={
+                <Button onClick={() => { setEditing(null); setFormOpen(true); }} className="h-9 px-3.5 text-xs font-semibold shadow-xs">
+                  <Plus className="h-4 w-4" aria-hidden />Add first account
+                </Button>
+              }
+            />
+          ) : (
+            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+              {activeAccounts.map((a) => (
+                <div key={a.id} className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3.5 shadow-xs">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="rounded-lg bg-slate-100 p-1.5">{typeIcon(a.type)}</div>
+                        <span className="font-semibold text-slate-900 text-sm">{a.name}</span>
+                      </div>
+                      {typeBadge(a.type)}
+                    </div>
+                    <div className="mt-3">
+                      <p className="text-[11px] text-slate-500 font-medium">Current Balance</p>
+                      <p className="num text-xl font-bold text-slate-900">{formatINR(a.current_balance_paise)}</p>
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-x-2 text-[11px] text-slate-400">
+                      <span>Opening: {formatINR(a.opening_balance_paise)}</span>
+                      <span>·</span>
+                      <span>{a.tx_count} {a.tx_count === 1 ? "entry" : "entries"}</span>
+                    </div>
+                  </div>
 
-      {/* Transfers History */}
-      <div>
-        <h2 className="mb-3 text-sm font-semibold text-slate-700">Account Transfers</h2>
-        {transfers.length === 0 ? (
-          <div className="rounded-card border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
-            No transfers recorded yet. Use &ldquo;Transfer money&rdquo; to move capital between accounts without logging an expense.
-          </div>
-        ) : (
-          <div className="overflow-x-auto rounded-card border border-slate-200 bg-white">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-slate-600">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Date</th>
-                  <th className="px-4 py-3 font-medium">From Account</th>
-                  <th className="px-4 py-3 font-medium">To Account</th>
-                  <th className="px-4 py-3 font-medium">Note</th>
-                  <th className="px-4 py-3 text-right font-medium">Amount</th>
-                  <th className="px-4 py-3 text-right font-medium"><span className="sr-only">Actions</span></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {transfers.map((tf) => (
-                  <tr key={tf.id} className="hover:bg-slate-50">
-                    <td className="num whitespace-nowrap px-4 py-3 text-slate-600">{displayDate(tf.occurred_on)}</td>
-                    <td className="px-4 py-3 font-medium text-slate-900">{tf.from_account?.name ?? "—"}</td>
-                    <td className="px-4 py-3 font-medium text-slate-900">{tf.to_account?.name ?? "—"}</td>
-                    <td className="max-w-[14rem] truncate px-4 py-3 text-slate-500">{tf.note ?? "—"}</td>
-                    <td className="num whitespace-nowrap px-4 py-3 text-right font-semibold text-indigo-700">{formatINR(tf.amount_paise)}</td>
-                    <td className="px-4 py-3 text-right">
+                  <div className="mt-3 flex items-center justify-end gap-1 border-t border-slate-100 pt-2">
+                    <button
+                      onClick={() => { setEditing(a); setFormOpen(true); }}
+                      className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                      aria-label={`Edit ${a.name}`}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setArchiveTarget(a)}
+                      className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-amber-600"
+                      aria-label={`Archive ${a.name}`}
+                    >
+                      <Archive className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Archived Accounts */}
+          {showArchived && archivedAccounts.length > 0 && (
+            <div className="mt-4 rounded-xl border border-dashed border-slate-300 bg-slate-50/50 p-3">
+              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Archived Accounts</h3>
+              <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                {archivedAccounts.map((a) => (
+                  <div key={a.id} className="rounded-xl border border-slate-200 bg-white p-3 opacity-75 shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-slate-700 text-sm">{a.name}</span>
                       <button
-                        onClick={() => setDeleteTransferTarget(tf)}
-                        className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-red-600"
-                        aria-label="Delete transfer"
+                        onClick={() => setArchiveTarget(a)}
+                        className="inline-flex items-center gap-1 text-xs text-brand-700 hover:underline"
                       >
-                        Delete
+                        <ArchiveRestore className="h-3.5 w-3.5" /> Restore
                       </button>
-                    </td>
-                  </tr>
+                    </div>
+                    <p className="num mt-1 font-semibold text-slate-600">{formatINR(a.current_balance_paise)}</p>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Transfers History */}
+        <div>
+          <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-700">Account Transfers</h2>
+          {transfers.length === 0 ? (
+            <div className="rounded-xl border border-slate-200 bg-white p-6 text-center text-xs text-slate-500 shadow-xs">
+              No transfers recorded yet. Use &ldquo;Transfer money&rdquo; to move capital between accounts without logging an expense.
+            </div>
+          ) : (
+            <div className="overflow-x-auto rounded-card border border-slate-200 bg-white shadow-sm">
+              <table className="w-full text-left text-xs md:text-sm">
+                <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50 text-slate-600 text-xs font-semibold shadow-xs">
+                  <tr>
+                    <th className="px-4 py-2">Date</th>
+                    <th className="px-4 py-2">From Account</th>
+                    <th className="px-4 py-2">To Account</th>
+                    <th className="px-4 py-2">Note</th>
+                    <th className="px-4 py-2 text-right">Amount</th>
+                    <th className="px-4 py-2 text-right"><span className="sr-only">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {transfers.map((tf) => (
+                    <tr key={tf.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="num whitespace-nowrap px-4 py-2 text-slate-600">{displayDate(tf.occurred_on)}</td>
+                      <td className="px-4 py-2 font-semibold text-slate-900">{tf.from_account?.name ?? "—"}</td>
+                      <td className="px-4 py-2 font-semibold text-slate-900">{tf.to_account?.name ?? "—"}</td>
+                      <td className="max-w-[14rem] truncate px-4 py-2 text-slate-500">{tf.note ?? "—"}</td>
+                      <td className="num whitespace-nowrap px-4 py-2 text-right font-bold text-indigo-700">{formatINR(tf.amount_paise)}</td>
+                      <td className="px-4 py-2 text-right">
+                        <button
+                          onClick={() => setDeleteTransferTarget(tf)}
+                          className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-red-600"
+                          aria-label="Delete transfer"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
       <AccountFormModal
@@ -358,6 +364,6 @@ export function AccountsView() {
         onConfirm={() => void handleDeleteTransfer()}
         onClose={() => setDeleteTransferTarget(null)}
       />
-    </>
+    </div>
   );
 }
