@@ -109,125 +109,103 @@ export function RecentlyDeletedView() {
       </div>
 
       {/* Filter Tabs */}
-      <div className="mb-2 flex flex-wrap items-center gap-1.5 border-b border-slate-200 pb-2 shrink-0">
-        <button
-          type="button"
-          onClick={() => setTab("all")}
-          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-            tab === "all"
-              ? "bg-slate-900 text-white shadow-sm"
-              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-          }`}
-        >
-          All
-          <span
-            className={`rounded-full px-1.5 py-0.2 text-[10px] ${
-              tab === "all" ? "bg-slate-800 text-slate-200" : "bg-white text-slate-600"
-            }`}
+      <div className="mb-2 flex items-center shrink-0">
+        <div className="filter-capsule flex-wrap">
+          <button
+            type="button"
+            onClick={() => setTab("all")}
+            className={`flex items-center gap-1.5 ${tab === "all" ? "filter-pill-active" : "filter-pill-inactive"}`}
           >
-            {counts.all}
-          </span>
-        </button>
+            All
+            <span
+              className={`rounded-full px-1.5 py-0.2 text-[10px] ${
+                tab === "all" ? "bg-white/20 text-white dark:bg-black/15 dark:text-zinc-950 font-bold" : "bg-slate-200/70 text-slate-600 dark:bg-white/10 dark:text-zinc-400"
+              }`}
+            >
+              {counts.all}
+            </span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setTab("expense")}
-          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-            tab === "expense"
-              ? "bg-rose-700 text-white shadow-sm"
-              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-          }`}
-        >
-          <Receipt className="h-3.5 w-3.5" />
-          Expenses
-          <span
-            className={`rounded-full px-1.5 py-0.2 text-[10px] ${
-              tab === "expense" ? "bg-rose-800 text-rose-100" : "bg-white text-slate-600"
-            }`}
+          <button
+            type="button"
+            onClick={() => setTab("expense")}
+            className={`flex items-center gap-1.5 ${tab === "expense" ? "filter-pill-active" : "filter-pill-inactive"}`}
           >
-            {counts.expense}
-          </span>
-        </button>
+            <Receipt className={`h-3.5 w-3.5 ${tab === "expense" ? "text-white dark:text-zinc-950" : "text-slate-400 dark:text-zinc-400"}`} />
+            Expenses
+            <span
+              className={`rounded-full px-1.5 py-0.2 text-[10px] ${
+                tab === "expense" ? "bg-white/20 text-white dark:bg-black/15 dark:text-zinc-950 font-bold" : "bg-slate-200/70 text-slate-600 dark:bg-white/10 dark:text-zinc-400"
+              }`}
+            >
+              {counts.expense}
+            </span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setTab("income")}
-          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-            tab === "income"
-              ? "bg-emerald-700 text-white shadow-sm"
-              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-          }`}
-        >
-          <IndianRupee className="h-3.5 w-3.5" />
-          Income
-          <span
-            className={`rounded-full px-1.5 py-0.2 text-[10px] ${
-              tab === "income" ? "bg-emerald-800 text-emerald-100" : "bg-white text-slate-600"
-            }`}
+          <button
+            type="button"
+            onClick={() => setTab("income")}
+            className={`flex items-center gap-1.5 ${tab === "income" ? "filter-pill-active" : "filter-pill-inactive"}`}
           >
-            {counts.income}
-          </span>
-        </button>
+            <IndianRupee className={`h-3.5 w-3.5 ${tab === "income" ? "text-white dark:text-zinc-950" : "text-slate-400 dark:text-zinc-400"}`} />
+            Income
+            <span
+              className={`rounded-full px-1.5 py-0.2 text-[10px] ${
+                tab === "income" ? "bg-white/20 text-white dark:bg-black/15 dark:text-zinc-950 font-bold" : "bg-slate-200/70 text-slate-600 dark:bg-white/10 dark:text-zinc-400"
+              }`}
+            >
+              {counts.income}
+            </span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setTab("fno")}
-          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-            tab === "fno"
-              ? "bg-violet-700 text-white shadow-sm"
-              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-          }`}
-        >
-          <CandlestickChart className="h-3.5 w-3.5" />
-          F&O
-          <span
-            className={`rounded-full px-1.5 py-0.2 text-[10px] ${
-              tab === "fno" ? "bg-violet-800 text-violet-100" : "bg-white text-slate-600"
-            }`}
+          <button
+            type="button"
+            onClick={() => setTab("fno")}
+            className={`flex items-center gap-1.5 ${tab === "fno" ? "filter-pill-active" : "filter-pill-inactive"}`}
           >
-            {counts.fno}
-          </span>
-        </button>
+            <CandlestickChart className={`h-3.5 w-3.5 ${tab === "fno" ? "text-white dark:text-zinc-950" : "text-slate-400 dark:text-zinc-400"}`} />
+            F&O
+            <span
+              className={`rounded-full px-1.5 py-0.2 text-[10px] ${
+                tab === "fno" ? "bg-white/20 text-white dark:bg-black/15 dark:text-zinc-950 font-bold" : "bg-slate-200/70 text-slate-600 dark:bg-white/10 dark:text-zinc-400"
+              }`}
+            >
+              {counts.fno}
+            </span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setTab("ipo")}
-          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-            tab === "ipo"
-              ? "bg-blue-700 text-white shadow-sm"
-              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-          }`}
-        >
-          <Rocket className="h-3.5 w-3.5" />
-          IPO
-          <span
-            className={`rounded-full px-1.5 py-0.2 text-[10px] ${
-              tab === "ipo" ? "bg-blue-800 text-blue-100" : "bg-white text-slate-600"
-            }`}
+          <button
+            type="button"
+            onClick={() => setTab("ipo")}
+            className={`flex items-center gap-1.5 ${tab === "ipo" ? "filter-pill-active" : "filter-pill-inactive"}`}
           >
-            {counts.ipo}
-          </span>
-        </button>
+            <Rocket className={`h-3.5 w-3.5 ${tab === "ipo" ? "text-white dark:text-zinc-950" : "text-slate-400 dark:text-zinc-400"}`} />
+            IPO
+            <span
+              className={`rounded-full px-1.5 py-0.2 text-[10px] ${
+                tab === "ipo" ? "bg-white/20 text-white dark:bg-black/15 dark:text-zinc-950 font-bold" : "bg-slate-200/70 text-slate-600 dark:bg-white/10 dark:text-zinc-400"
+              }`}
+            >
+              {counts.ipo}
+            </span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setTab("borrowing")}
-          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-            tab === "borrowing"
-              ? "bg-indigo-700 text-white shadow-sm"
-              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-          }`}
-        >
-          <ArrowLeftRight className="h-3.5 w-3.5" />
-          Borrow & Lend
-          <span
-            className={`rounded-full px-1.5 py-0.2 text-[10px] ${
-              tab === "borrowing" ? "bg-indigo-800 text-indigo-100" : "bg-white text-slate-600"
-            }`}
+          <button
+            type="button"
+            onClick={() => setTab("borrowing")}
+            className={`flex items-center gap-1.5 ${tab === "borrowing" ? "filter-pill-active" : "filter-pill-inactive"}`}
           >
-            {counts.borrowing}
-          </span>
-        </button>
+            <ArrowLeftRight className={`h-3.5 w-3.5 ${tab === "borrowing" ? "text-white dark:text-zinc-950" : "text-slate-400 dark:text-zinc-400"}`} />
+            Borrow & Lend
+            <span
+              className={`rounded-full px-1.5 py-0.2 text-[10px] ${
+                tab === "borrowing" ? "bg-white/20 text-white dark:bg-black/15 dark:text-zinc-950 font-bold" : "bg-slate-200/70 text-slate-600 dark:bg-white/10 dark:text-zinc-400"
+              }`}
+            >
+              {counts.borrowing}
+            </span>
+          </button>
+        </div>
       </div>
 
       {error && (

@@ -306,29 +306,29 @@ export function FnoFormModal({
                   key={inst.value}
                   type="button"
                   onClick={() => setValue("instrument_type", inst.value)}
-                  className={`flex flex-col items-center justify-center rounded-lg border p-2.5 text-center transition-all ${
+                  className={`flex flex-col items-center justify-center rounded-lg border p-2.5 text-center transition-all cursor-pointer ${
                     selected
                       ? inst.value === "call"
-                        ? "border-emerald-600 bg-emerald-50 text-emerald-950 ring-1 ring-emerald-600 font-semibold"
+                        ? "border-emerald-600 bg-emerald-50 text-emerald-950 ring-1 ring-emerald-600 font-semibold dark:border-emerald-500 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-500"
                         : inst.value === "put"
-                        ? "border-rose-600 bg-rose-50 text-rose-950 ring-1 ring-rose-600 font-semibold"
-                        : "border-brand-600 bg-brand-50 text-brand-950 ring-1 ring-brand-600 font-semibold"
-                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 font-medium"
+                        ? "border-rose-600 bg-rose-50 text-rose-950 ring-1 ring-rose-600 font-semibold dark:border-rose-500 dark:bg-rose-500/15 dark:text-rose-300 dark:ring-rose-500"
+                        : "border-brand-600 bg-brand-50 text-brand-950 ring-1 ring-brand-600 font-semibold dark:border-white/30 dark:bg-white/10 dark:text-white dark:ring-white/30"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 font-medium dark:border-white/10 dark:bg-[#141414] dark:text-zinc-400 dark:hover:bg-[#1a1a1a] dark:hover:text-white"
                   }`}
                 >
                   <div className="flex items-center gap-1.5 text-sm">
                     {inst.value === "call" && (
-                      <ArrowUpRight className="h-4 w-4 text-emerald-600" aria-hidden />
+                      <ArrowUpRight className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden />
                     )}
                     {inst.value === "put" && (
-                      <ArrowDownRight className="h-4 w-4 text-rose-600" aria-hidden />
+                      <ArrowDownRight className="h-4 w-4 text-rose-600 dark:text-rose-400" aria-hidden />
                     )}
                     {inst.value === "future" && (
-                      <Activity className="h-4 w-4 text-brand-600" aria-hidden />
+                      <Activity className="h-4 w-4 text-brand-600 dark:text-white" aria-hidden />
                     )}
                     <span>{inst.label}</span>
                   </div>
-                  <span className="mt-0.5 text-[11px] text-slate-400">
+                  <span className="mt-0.5 text-[11px] text-slate-400 dark:text-zinc-400">
                     {inst.value === "call"
                       ? "Bullish (CE)"
                       : inst.value === "put"
@@ -354,17 +354,17 @@ export function FnoFormModal({
                   key={seg.value}
                   type="button"
                   onClick={() => handleSegmentChange(seg.value)}
-                  className={`flex flex-col items-start rounded-lg border p-2.5 text-left transition-all ${
+                  className={`flex flex-col items-start rounded-lg border p-2.5 text-left transition-all cursor-pointer ${
                     selected
-                      ? "border-brand-600 bg-brand-50/80 text-brand-950 ring-1 ring-brand-600 font-semibold shadow-sm"
-                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 font-medium"
+                      ? "border-brand-600 bg-brand-50/80 text-brand-950 ring-1 ring-brand-600 font-semibold shadow-sm dark:border-white/30 dark:bg-white/10 dark:text-white dark:ring-white/30"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 font-medium dark:border-white/10 dark:bg-[#141414] dark:text-zinc-400 dark:hover:bg-[#1a1a1a] dark:hover:text-white"
                   }`}
                 >
                   <div className="flex items-center gap-1.5 text-sm">
                     <span>{seg.value === "equity" ? "📈" : "🛢️"}</span>
                     <span>{seg.label}</span>
                   </div>
-                  <span className="mt-0.5 text-[11px] text-slate-500">
+                  <span className="mt-0.5 text-[11px] text-slate-500 dark:text-zinc-400">
                     {seg.sub}
                   </span>
                 </button>
@@ -388,10 +388,10 @@ export function FnoFormModal({
                   key={s}
                   type="button"
                   onClick={() => handleSymbolSelect(s)}
-                  className={`rounded px-1.5 py-0.5 text-[11px] font-medium transition-colors ${
+                  className={`rounded px-1.5 py-0.5 text-[11px] font-medium transition-colors cursor-pointer ${
                     symbol.toUpperCase() === s
-                      ? "bg-brand-600 text-white"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      ? "bg-brand-600 text-white dark:bg-white dark:text-zinc-950 dark:font-bold"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-[#181818] dark:text-zinc-400 dark:hover:bg-[#222222] dark:hover:text-white"
                   }`}
                 >
                   {s}
@@ -470,7 +470,7 @@ export function FnoFormModal({
         </div>
 
         {/* 5. Lots & Lot Size with Auto-Calculated Total Quantity Pill */}
-        <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-3">
+        <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-3 dark:border-white/10 dark:bg-[#181818]">
           <div className="grid gap-3 sm:grid-cols-2">
             <FieldShell
               label="Number of Lots"
@@ -486,7 +486,7 @@ export function FnoFormModal({
                   placeholder="e.g. 1"
                   aria-describedby={d}
                   {...register("lots")}
-                  className={`num h-10 w-full rounded-lg border bg-white px-3 text-sm font-semibold ${
+                  className={`num h-10 w-full rounded-lg border bg-white px-3 text-sm font-semibold dark:border-white/10 dark:bg-[#121212] dark:text-white ${
                     errors.lots ? "border-red-400" : "border-slate-300"
                   }`}
                 />
@@ -515,7 +515,7 @@ export function FnoFormModal({
                   placeholder="e.g. 65"
                   aria-describedby={d}
                   {...register("lot_size")}
-                  className={`num h-10 w-full rounded-lg border bg-white px-3 text-sm font-semibold ${
+                  className={`num h-10 w-full rounded-lg border bg-white px-3 text-sm font-semibold dark:border-white/10 dark:bg-[#121212] dark:text-white ${
                     errors.lot_size ? "border-red-400" : "border-slate-300"
                   }`}
                 />
@@ -523,11 +523,11 @@ export function FnoFormModal({
             </FieldShell>
           </div>
 
-          <div className="mt-2.5 flex items-center justify-between rounded-lg bg-white px-3 py-2 border border-slate-200 shadow-xs text-xs">
-            <span className="text-slate-600 font-medium">
+          <div className="mt-2.5 flex items-center justify-between rounded-lg bg-white px-3 py-2 border border-slate-200 shadow-xs text-xs dark:border-white/10 dark:bg-[#141414]">
+            <span className="text-slate-600 font-medium dark:text-zinc-400">
               Calculated Total Quantity:
             </span>
-            <span className="num font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded border border-brand-200">
+            <span className="num font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded border border-brand-200 dark:text-white dark:bg-white/10 dark:border-white/20">
               {lotsStr || 1} {parseInt(lotsStr, 10) === 1 ? "Lot" : "Lots"} × {lotSizeStr || 1} ={" "}
               {computedQuantity} units
             </span>
@@ -613,15 +613,15 @@ export function FnoFormModal({
         </div>
 
         {/* 7. Groww Official Charges Breakdown Toggle */}
-        <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2.5 text-xs">
+        <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2.5 text-xs dark:border-white/10 dark:bg-[#181818]">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 font-medium text-slate-700">
-              <Calculator className="h-4 w-4 text-brand-600" />
+            <div className="flex items-center gap-1.5 font-medium text-slate-700 dark:text-zinc-300">
+              <Calculator className="h-4 w-4 text-brand-600 dark:text-zinc-400" />
               <span>Groww Policy Charges:</span>
-              <span className="num font-bold text-slate-900">
+              <span className="num font-bold text-slate-900 dark:text-white">
                 ₹{growwBreakdown.totalChargesRupees.toFixed(2)}
               </span>
-              <span className="text-[11px] text-slate-500">
+              <span className="text-[11px] text-slate-500 dark:text-zinc-400">
                 ({segment === "commodity" ? "MCX rates" : "NSE/BSE rates"})
               </span>
             </div>
@@ -629,7 +629,7 @@ export function FnoFormModal({
             <button
               type="button"
               onClick={() => setShowGrowwBreakdown(!showGrowwBreakdown)}
-              className="flex items-center gap-1 text-[11px] font-semibold text-brand-600 hover:text-brand-700"
+              className="flex items-center gap-1 text-[11px] font-semibold text-brand-600 hover:text-brand-700 dark:text-zinc-400 dark:hover:text-white cursor-pointer"
             >
               <span>{showGrowwBreakdown ? "Hide details" : "View breakdown"}</span>
               {showGrowwBreakdown ? (
@@ -641,7 +641,7 @@ export function FnoFormModal({
           </div>
 
           {showGrowwBreakdown && (
-            <div className="mt-2.5 grid grid-cols-2 gap-2 border-t border-slate-200 pt-2 text-[11px] text-slate-600 sm:grid-cols-3">
+            <div className="mt-2.5 grid grid-cols-2 gap-2 border-t border-slate-200 pt-2 text-[11px] text-slate-600 sm:grid-cols-3 dark:border-white/10 dark:text-zinc-400">
               <div>
                 Brokerage (Groww ₹20/leg):{" "}
                 <span className="num font-semibold text-slate-800">
@@ -693,33 +693,33 @@ export function FnoFormModal({
           <div
             className={`rounded-lg border p-3.5 transition-all ${
               livePnl.netPnlPaise > 0
-                ? "border-emerald-200 bg-emerald-50/90 text-emerald-950"
+                ? "border-emerald-200 bg-emerald-50/90 text-emerald-950 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
                 : livePnl.netPnlPaise < 0
-                ? "border-rose-200 bg-rose-50/90 text-rose-950"
-                : "border-slate-200 bg-slate-50 text-slate-800"
+                ? "border-rose-200 bg-rose-50/90 text-rose-950 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
+                : "border-slate-200 bg-slate-50 text-slate-800 dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300"
             }`}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {livePnl.netPnlPaise > 0 ? (
-                  <TrendingUp className="h-5 w-5 text-emerald-600" />
+                  <TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                 ) : livePnl.netPnlPaise < 0 ? (
-                  <TrendingDown className="h-5 w-5 text-rose-600" />
+                  <TrendingDown className="h-5 w-5 text-rose-600 dark:text-rose-400" />
                 ) : (
-                  <Activity className="h-5 w-5 text-slate-500" />
+                  <Activity className="h-5 w-5 text-slate-500 dark:text-zinc-400" />
                 )}
                 <div>
-                  <span className="text-xs font-medium uppercase tracking-wider text-slate-600">
+                  <span className="text-xs font-medium uppercase tracking-wider text-slate-600 dark:text-zinc-400">
                     Calculated Net P&L:
                   </span>
                   <div className="flex items-baseline gap-2">
                     <span
                       className={`num text-xl font-bold ${
                         livePnl.netPnlPaise > 0
-                          ? "text-emerald-700"
+                          ? "text-emerald-700 dark:text-emerald-400"
                           : livePnl.netPnlPaise < 0
-                          ? "text-rose-700"
-                          : "text-slate-800"
+                          ? "text-rose-700 dark:text-rose-400"
+                          : "text-slate-800 dark:text-white"
                       }`}
                     >
                       {livePnl.netPnlPaise > 0
@@ -730,10 +730,10 @@ export function FnoFormModal({
                       <span
                         className={`num text-xs font-semibold ${
                           livePnl.roiPct > 0
-                            ? "text-emerald-600"
+                            ? "text-emerald-600 dark:text-emerald-400"
                             : livePnl.roiPct < 0
-                            ? "text-rose-600"
-                            : "text-slate-500"
+                            ? "text-rose-600 dark:text-rose-400"
+                            : "text-slate-500 dark:text-zinc-400"
                         }`}
                       >
                         ({livePnl.roiPct > 0 ? `+${livePnl.roiPct}` : livePnl.roiPct}%)

@@ -402,37 +402,37 @@ export function DashboardView() {
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/accounts"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300 dark:hover:bg-[#222222] dark:hover:text-white"
           >
-            <Landmark className="h-3.5 w-3.5 text-slate-600" />
+            <Landmark className="h-3.5 w-3.5 text-slate-600 dark:text-zinc-400" />
             <span>Accounts</span>
           </Link>
           <Link
             href="/income"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300 dark:hover:bg-[#222222] dark:hover:text-white"
           >
-            <Plus className="h-3.5 w-3.5 text-slate-600" />
+            <Plus className="h-3.5 w-3.5 text-slate-600 dark:text-zinc-400" />
             <span>Income</span>
           </Link>
           <Link
             href="/fno"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300 dark:hover:bg-[#222222] dark:hover:text-white"
           >
-            <CandlestickChart className="h-3.5 w-3.5 text-slate-600" />
+            <CandlestickChart className="h-3.5 w-3.5 text-slate-600 dark:text-zinc-400" />
             <span>F&O</span>
           </Link>
           <Link
             href="/ipo"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300 dark:hover:bg-[#222222] dark:hover:text-white"
           >
-            <Rocket className="h-3.5 w-3.5 text-slate-600" />
+            <Rocket className="h-3.5 w-3.5 text-slate-600 dark:text-zinc-400" />
             <span>IPO</span>
           </Link>
           <Link
             href="/borrowing"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300 dark:hover:bg-[#222222] dark:hover:text-white"
           >
-            <HandCoins className="h-3.5 w-3.5 text-slate-600" />
+            <HandCoins className="h-3.5 w-3.5 text-slate-600 dark:text-zinc-400" />
             <span>Borrow & Lend</span>
           </Link>
           <Link href="/expenses">
@@ -458,17 +458,13 @@ export function DashboardView() {
 
       {/* Filter Section - compact pills */}
       <div className="mb-2 flex items-center justify-between shrink-0">
-        <div className="flex items-center rounded-lg border border-slate-200 bg-white p-0.5 shadow-xs">
+        <div className="filter-capsule">
           {PERIODS.map((p) => (
             <button
               key={p.key}
               type="button"
               onClick={() => setPeriod(p.key)}
-              className={`rounded-md px-2.5 py-1 text-xs font-medium transition ${
-                period === p.key
-                  ? "bg-slate-900 text-white shadow-xs font-semibold"
-                  : "text-slate-600 hover:bg-slate-100"
-              }`}
+              className={period === p.key ? "filter-pill-active" : "filter-pill-inactive"}
             >
               {p.label}
             </button>
@@ -481,14 +477,14 @@ export function DashboardView() {
         {cards.map((c) => (
           <div
             key={c.label}
-            className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs"
+            className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]"
           >
             <div className="flex items-center justify-between gap-1">
-              <p className="text-[11px] font-medium text-slate-500 truncate">{c.label}</p>
+              <p className="text-[11px] font-medium text-slate-500 truncate dark:text-zinc-400">{c.label}</p>
               {c.href && (
                 <Link
                   href={c.href}
-                  className="text-[11px] font-medium text-brand-700 hover:underline shrink-0"
+                  className="text-[11px] font-medium text-brand-700 hover:underline shrink-0 dark:text-zinc-400 dark:hover:text-white transition-colors"
                 >
                   View →
                 </Link>
@@ -516,7 +512,7 @@ export function DashboardView() {
             </div>
             <div className="min-h-[14px]">
               {c.note && (
-                <p className="text-[10px] text-slate-400 truncate">{c.note}</p>
+                <p className="text-[10px] text-slate-400 truncate dark:text-zinc-500">{c.note}</p>
               )}
             </div>
           </div>
@@ -525,12 +521,12 @@ export function DashboardView() {
 
       {/* Recent Transactions Section Heading */}
       <div className="mb-1.5 flex items-center justify-between shrink-0">
-        <h2 className="text-xs font-semibold  tracking-wider text-slate-700">
+        <h2 className="text-xs font-semibold tracking-wider text-slate-700 dark:text-zinc-300">
           Recent Transactions ({periodLabel})
         </h2>
         <Link
           href={viewExpensesUrl}
-          className="text-xs font-medium text-brand-700 hover:underline"
+          className="text-xs font-medium text-brand-700 hover:underline dark:text-zinc-400 dark:hover:text-white transition-colors"
         >
           View all expenses →
         </Link>
@@ -558,33 +554,33 @@ export function DashboardView() {
             }
           />
         ) : (
-          <div className="flex-1 min-h-0 overflow-y-auto rounded-card border border-slate-200 bg-white shadow-sm flex flex-col">
-            <ul className="divide-y divide-slate-100 flex-1">
+          <div className="flex-1 min-h-0 overflow-y-auto rounded-card border border-slate-200 bg-white shadow-sm flex flex-col dark:border-white/10 dark:bg-[#141414]">
+            <ul className="divide-y divide-slate-100 flex-1 dark:divide-white/5">
               {displayedExpenses.map((e) => (
                 <li
                   key={e.id}
-                  className="flex items-center justify-between gap-3 px-3.5 py-2.5 hover:bg-slate-50 transition-colors"
+                  className="flex items-center justify-between gap-3 px-3.5 py-2.5 hover:bg-slate-50 transition-colors dark:hover:bg-white/[0.03]"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-xs md:text-sm font-semibold text-slate-900">
+                    <p className="truncate text-xs md:text-sm font-semibold text-slate-900 dark:text-zinc-100">
                       {e.title}
                     </p>
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-[11px] text-slate-500 dark:text-zinc-400">
                       {e.category?.name ?? "—"} · {displayDate(e.occurred_on)}
                       {e.account?.name ? ` · ${e.account.name}` : ""}
                     </p>
                   </div>
-                  <p className="num shrink-0 text-xs md:text-sm font-bold text-red-600">
+                  <p className="num shrink-0 text-xs md:text-sm font-bold text-rose-700">
                     {formatINR(e.amount_paise)}
                   </p>
                 </li>
               ))}
             </ul>
             {filteredExpenses.length > 10 && (
-              <div className="border-t border-slate-100 bg-slate-50/70 px-3.5 py-1.5 text-right shrink-0">
+              <div className="border-t border-slate-100 bg-slate-50/70 px-3.5 py-1.5 text-right shrink-0 dark:border-white/10 dark:bg-[#181818]">
                 <Link
                   href={viewExpensesUrl}
-                  className="text-xs font-semibold text-brand-700 hover:underline"
+                  className="text-xs font-semibold text-brand-700 hover:underline dark:text-zinc-300 dark:hover:text-white transition-colors"
                 >
                   Showing 10 of {filteredExpenses.length} expenses · View all with current filter →
                 </Link>

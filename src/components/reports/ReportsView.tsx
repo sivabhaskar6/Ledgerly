@@ -216,44 +216,28 @@ export function ReportsView() {
       {/* Filter Bar (Fixed) */}
       <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2.5 rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs shrink-0">
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded-lg border border-slate-200 p-0.5 text-xs font-medium bg-slate-50/50">
+          <div className="filter-capsule">
             <button
               onClick={() => setPreset("month")}
-              className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
-                preset === "month"
-                  ? "bg-brand-600 text-white font-semibold shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
+              className={preset === "month" ? "filter-pill-active" : "filter-pill-inactive"}
             >
               This Month
             </button>
             <button
               onClick={() => setPreset("year")}
-              className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
-                preset === "year"
-                  ? "bg-brand-600 text-white font-semibold shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
+              className={preset === "year" ? "filter-pill-active" : "filter-pill-inactive"}
             >
               This Year
             </button>
             <button
               onClick={() => setPreset("all")}
-              className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
-                preset === "all"
-                  ? "bg-brand-600 text-white font-semibold shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
+              className={preset === "all" ? "filter-pill-active" : "filter-pill-inactive"}
             >
               All Time
             </button>
             <button
               onClick={() => setPreset("custom")}
-              className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
-                preset === "custom"
-                  ? "bg-brand-600 text-white font-semibold shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
+              className={preset === "custom" ? "filter-pill-active" : "filter-pill-inactive"}
             >
               Custom Range
             </button>
@@ -553,17 +537,13 @@ export function ReportsView() {
 
                 <div className="flex flex-wrap items-center gap-2">
                   {/* Filter Tabs: All | Expenses | Income */}
-                  <div className="flex rounded-lg border border-slate-200 p-0.5 text-xs font-medium bg-white shadow-2xs">
+                  <div className="filter-capsule">
                     <button
                       onClick={() => {
                         setTxFilter("all");
                         setTxPage(0);
                       }}
-                      className={`rounded-md px-2 py-0.5 transition-colors ${
-                        txFilter === "all"
-                          ? "bg-brand-600 text-white font-semibold shadow-xs"
-                          : "text-slate-600 hover:text-slate-900"
-                      }`}
+                      className={txFilter === "all" ? "filter-pill-active" : "filter-pill-inactive"}
                     >
                       All ({report?.transactions.length ?? 0})
                     </button>
@@ -572,11 +552,7 @@ export function ReportsView() {
                         setTxFilter("expense");
                         setTxPage(0);
                       }}
-                      className={`rounded-md px-2 py-0.5 transition-colors ${
-                        txFilter === "expense"
-                          ? "bg-brand-600 text-white font-semibold shadow-xs"
-                          : "text-slate-600 hover:text-slate-900"
-                      }`}
+                      className={txFilter === "expense" ? "filter-pill-active" : "filter-pill-inactive"}
                     >
                       Expenses ({report?.expenseCount ?? 0})
                     </button>
@@ -585,11 +561,7 @@ export function ReportsView() {
                         setTxFilter("income");
                         setTxPage(0);
                       }}
-                      className={`rounded-md px-2 py-0.5 transition-colors ${
-                        txFilter === "income"
-                          ? "bg-brand-600 text-white font-semibold shadow-xs"
-                          : "text-slate-600 hover:text-slate-900"
-                      }`}
+                      className={txFilter === "income" ? "filter-pill-active" : "filter-pill-inactive"}
                     >
                       Income / P&L ({report?.incomeCount ?? 0})
                     </button>

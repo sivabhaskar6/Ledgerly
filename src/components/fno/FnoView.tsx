@@ -229,15 +229,11 @@ export function FnoView() {
             <h1 className="text-xl font-bold tracking-tight text-slate-900">F&O Trading</h1>
             {/* Year Switcher */}
             {availableYears.length > 0 && (
-              <div className="flex items-center rounded-lg border border-slate-200 bg-white p-0.5 text-xs shadow-xs">
+              <div className="filter-capsule">
                 <button
                   type="button"
                   onClick={() => handleSelectYear(null)}
-                  className={`rounded-md px-2 py-0.5 font-medium transition ${
-                    selectedYear === null
-                      ? "bg-slate-900 text-white"
-                      : "text-slate-600 hover:bg-slate-100"
-                  }`}
+                  className={selectedYear === null ? "filter-pill-active" : "filter-pill-inactive"}
                 >
                   All Years
                 </button>
@@ -246,11 +242,7 @@ export function FnoView() {
                     type="button"
                     key={yr}
                     onClick={() => handleSelectYear(yr)}
-                    className={`rounded-md px-2 py-0.5 font-medium transition ${
-                      selectedYear === yr
-                        ? "bg-slate-900 text-white"
-                        : "text-slate-600 hover:bg-slate-100"
-                    }`}
+                    className={selectedYear === yr ? "filter-pill-active" : "filter-pill-inactive"}
                   >
                     {yr}
                   </button>

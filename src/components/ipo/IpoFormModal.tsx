@@ -164,10 +164,10 @@ export function IpoFormModal({
                 key={sym}
                 type="button"
                 onClick={() => setValue("symbol", sym, { shouldValidate: true })}
-                className={`rounded-md px-2 py-1 text-xs font-medium transition ${
+                className={`rounded-md px-2 py-1 text-xs font-medium transition cursor-pointer ${
                   symbol?.toUpperCase() === sym
-                    ? "bg-slate-900 text-white shadow-sm"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    ? "bg-slate-900 text-white shadow-sm dark:bg-white dark:text-zinc-950 dark:font-bold"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-[#181818] dark:text-zinc-400 dark:hover:bg-[#222222] dark:hover:text-white"
                 }`}
               >
                 {sym}
@@ -236,24 +236,24 @@ export function IpoFormModal({
           <div
             className={`rounded-xl border p-3.5 transition-all ${
               isProfit
-                ? "border-emerald-200 bg-emerald-50/70 text-emerald-950"
-                : "border-rose-200 bg-rose-50/70 text-rose-950"
+                ? "border-emerald-200 bg-emerald-50/70 text-emerald-950 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+                : "border-rose-200 bg-rose-50/70 text-rose-950 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
             }`}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {isProfit ? (
-                  <TrendingUp className="h-5 w-5 text-emerald-600" />
+                  <TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                 ) : (
-                  <TrendingDown className="h-5 w-5 text-rose-600" />
+                  <TrendingDown className="h-5 w-5 text-rose-600 dark:text-rose-400" />
                 )}
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
                     Live Listing {isProfit ? "Gain" : "Loss"} (Net P&L)
                   </p>
                   <p
                     className={`num text-xl font-bold ${
-                      isProfit ? "text-emerald-700" : "text-rose-700"
+                      isProfit ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"
                     }`}
                   >
                     {isProfit
@@ -268,22 +268,22 @@ export function IpoFormModal({
                 </div>
               </div>
 
-              <div className="text-right text-xs text-slate-600">
+              <div className="text-right text-xs text-slate-600 dark:text-zinc-300">
                 <p>
                   Gross:{" "}
-                  <span className="num font-semibold">
+                  <span className="num font-semibold text-slate-900 dark:text-white">
                     {livePnl.grossPnlPaise >= 0
                       ? `+${formatINR(livePnl.grossPnlPaise)}`
                       : formatINR(livePnl.grossPnlPaise)}
                   </span>
                 </p>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-slate-500 dark:text-zinc-400">
                   Invested: {formatINR(livePnl.totalInvestedPaise)} → Realized: {formatINR(livePnl.totalSoldPaise)}
                 </p>
               </div>
             </div>
 
-            <p className="mt-2 text-[11px] text-slate-600 border-t border-slate-200/60 pt-1.5">
+            <p className="mt-2 text-[11px] text-slate-600 dark:text-zinc-400 border-t border-slate-200/60 dark:border-white/10 pt-1.5">
               {isProfit
                 ? `⚡ This net profit will be added to your Income and increase This Month's Income.`
                 : `⚡ This net listing loss will be deducted from your Income and decrease This Month's Income.`}

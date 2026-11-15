@@ -128,9 +128,9 @@ export function CapitalView() {
               {data.latestDeltaPaise >= 0 ? (
                 <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
               ) : (
-                <TrendingDown className="h-3.5 w-3.5 text-red-600" />
+                <TrendingDown className="h-3.5 w-3.5 text-rose-700" />
               )}
-              <span className={`num text-lg font-bold md:text-xl ${data.latestDeltaPaise >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+              <span className={`num text-lg font-bold md:text-xl ${data.latestDeltaPaise >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
                 {data.latestDeltaPaise >= 0 ? `+${formatINR(data.latestDeltaPaise)}` : formatINR(data.latestDeltaPaise)}
               </span>
               {data.latestDeltaPct !== null && (
@@ -199,7 +199,7 @@ export function CapitalView() {
                     </td>
                     <td className="num whitespace-nowrap px-4 py-2 text-right">
                       {entry.deltaPaise !== null ? (
-                        <span className={`inline-flex items-center gap-0.5 font-medium ${entry.deltaPaise >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+                        <span className={`inline-flex items-center gap-0.5 font-medium ${entry.deltaPaise >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
                           {entry.deltaPaise >= 0 ? `+${formatINR(entry.deltaPaise)}` : formatINR(entry.deltaPaise)}
                           {entry.deltaPct !== null && (
                             <span className="text-xs text-slate-400 ml-1">

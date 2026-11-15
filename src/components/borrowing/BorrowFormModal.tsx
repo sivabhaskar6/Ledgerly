@@ -112,13 +112,13 @@ export function BorrowFormModal({
           <label className="mb-1.5 block text-xs font-semibold text-slate-700">
             Transaction Type
           </label>
-          <div className="grid grid-cols-2 gap-2 rounded-lg bg-slate-100 p-1">
+          <div className="grid grid-cols-2 gap-2 rounded-lg bg-slate-100 p-1 dark:border dark:border-white/10 dark:bg-[#141414]">
             <button
               type="button"
-              className={`flex items-center justify-center gap-1.5 rounded-md py-2 text-xs font-bold transition ${
+              className={`flex items-center justify-center gap-1.5 rounded-md py-2 text-xs font-bold transition cursor-pointer ${
                 selectedType === "lent"
-                  ? "bg-emerald-600 text-white shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-emerald-600 text-white shadow-sm dark:bg-emerald-500 dark:text-zinc-950"
+                  : "text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white"
               }`}
               onClick={() => setValue("type", "lent")}
             >
@@ -127,10 +127,10 @@ export function BorrowFormModal({
             </button>
             <button
               type="button"
-              className={`flex items-center justify-center gap-1.5 rounded-md py-2 text-xs font-bold transition ${
+              className={`flex items-center justify-center gap-1.5 rounded-md py-2 text-xs font-bold transition cursor-pointer ${
                 selectedType === "borrowed"
-                  ? "bg-amber-600 text-white shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-amber-600 text-white shadow-sm dark:bg-amber-500 dark:text-zinc-950"
+                  : "text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white"
               }`}
               onClick={() => setValue("type", "borrowed")}
             >
@@ -198,13 +198,13 @@ export function BorrowFormModal({
           <label className="mb-1.5 block text-xs font-semibold text-slate-700">
             Payment Status
           </label>
-          <div className="grid grid-cols-2 gap-2 rounded-lg bg-slate-100 p-1">
+          <div className="grid grid-cols-2 gap-2 rounded-lg bg-slate-100 p-1 dark:border dark:border-white/10 dark:bg-[#141414]">
             <button
               type="button"
-              className={`flex items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-bold transition ${
+              className={`flex items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-bold transition cursor-pointer ${
                 selectedStatus === "pending"
-                  ? "bg-amber-500 text-white shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-amber-500 text-white shadow-sm dark:bg-amber-500 dark:text-zinc-950"
+                  : "text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white"
               }`}
               onClick={() => {
                 setValue("status", "pending");
@@ -216,10 +216,10 @@ export function BorrowFormModal({
             </button>
             <button
               type="button"
-              className={`flex items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-bold transition ${
+              className={`flex items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-bold transition cursor-pointer ${
                 selectedStatus === "settled"
-                  ? "bg-emerald-600 text-white shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-emerald-600 text-white shadow-sm dark:bg-emerald-500 dark:text-zinc-950"
+                  : "text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white"
               }`}
               onClick={() => {
                 setValue("status", "settled");
@@ -234,7 +234,7 @@ export function BorrowFormModal({
 
         {/* Settled On Date (visible when status is settled) */}
         {selectedStatus === "settled" && (
-          <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-3">
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-3 dark:border-emerald-500/30 dark:bg-emerald-500/10">
             <TextField
               label="Settlement Date (Date paid / received)"
               type="date"

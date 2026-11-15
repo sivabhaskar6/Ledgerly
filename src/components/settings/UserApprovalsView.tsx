@@ -221,20 +221,20 @@ export function UserApprovalsView() {
       </div>
 
       {/* Filter Tabs */}
-      <div className="mb-2 flex flex-wrap items-center gap-1.5 border-b border-slate-200 pb-2 shrink-0">
+      <div className="mb-2 flex flex-wrap items-center gap-1.5 border-b border-slate-200 pb-2 shrink-0 dark:border-white/10">
         <button
           type="button"
           onClick={() => setActiveTab("all")}
-          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs transition cursor-pointer ${
             activeTab === "all"
-              ? "bg-slate-900 text-white shadow-sm"
-              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              ? "bg-slate-900 text-white font-bold shadow-xs dark:bg-white dark:text-zinc-950 dark:shadow-sm"
+              : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:border-white/10 dark:bg-[#181818] dark:text-zinc-400 dark:hover:bg-[#252525] dark:hover:text-white font-medium"
           }`}
         >
           All
           <span
             className={`rounded-full px-1.5 py-0.2 text-[10px] ${
-              activeTab === "all" ? "bg-slate-800 text-slate-200" : "bg-white text-slate-600"
+              activeTab === "all" ? "bg-black/10 text-slate-900 dark:bg-black/15 dark:text-zinc-950 font-bold" : "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-zinc-400"
             }`}
           >
             {users.length}
@@ -244,17 +244,17 @@ export function UserApprovalsView() {
         <button
           type="button"
           onClick={() => setActiveTab("pending")}
-          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs transition cursor-pointer ${
             activeTab === "pending"
-              ? "bg-amber-600 text-white shadow-sm"
-              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              ? "bg-slate-900 text-white font-bold shadow-xs dark:bg-white dark:text-zinc-950 dark:shadow-sm"
+              : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:border-white/10 dark:bg-[#181818] dark:text-zinc-400 dark:hover:bg-[#252525] dark:hover:text-white font-medium"
           }`}
         >
-          <Clock className="h-3.5 w-3.5" />
+          <Clock className={`h-3.5 w-3.5 ${activeTab === "pending" ? "text-white dark:text-zinc-950" : "text-amber-500"}`} />
           Pending
           <span
             className={`rounded-full px-1.5 py-0.2 text-[10px] ${
-              activeTab === "pending" ? "bg-amber-700 text-amber-100" : "bg-white text-slate-600"
+              activeTab === "pending" ? "bg-black/10 text-slate-900 dark:bg-black/15 dark:text-zinc-950 font-bold" : "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-zinc-400"
             }`}
           >
             {pendingUsers.length}
@@ -264,17 +264,17 @@ export function UserApprovalsView() {
         <button
           type="button"
           onClick={() => setActiveTab("approved")}
-          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs transition cursor-pointer ${
             activeTab === "approved"
-              ? "bg-emerald-600 text-white shadow-sm"
-              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              ? "bg-slate-900 text-white font-bold shadow-xs dark:bg-white dark:text-zinc-950 dark:shadow-sm"
+              : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:border-white/10 dark:bg-[#181818] dark:text-zinc-400 dark:hover:bg-[#252525] dark:hover:text-white font-medium"
           }`}
         >
-          <CheckCircle2 className="h-3.5 w-3.5" />
+          <CheckCircle2 className={`h-3.5 w-3.5 ${activeTab === "approved" ? "text-white dark:text-zinc-950" : "text-emerald-500"}`} />
           Approved
           <span
             className={`rounded-full px-1.5 py-0.2 text-[10px] ${
-              activeTab === "approved" ? "bg-emerald-700 text-emerald-100" : "bg-white text-slate-600"
+              activeTab === "approved" ? "bg-black/10 text-slate-900 dark:bg-black/15 dark:text-zinc-950 font-bold" : "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-zinc-400"
             }`}
           >
             {approvedUsers.length}
@@ -284,17 +284,17 @@ export function UserApprovalsView() {
         <button
           type="button"
           onClick={() => setActiveTab("rejected")}
-          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs transition cursor-pointer ${
             activeTab === "rejected"
-              ? "bg-rose-600 text-white shadow-sm"
-              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              ? "bg-slate-900 text-white font-bold shadow-xs dark:bg-white dark:text-zinc-950 dark:shadow-sm"
+              : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:border-white/10 dark:bg-[#181818] dark:text-zinc-400 dark:hover:bg-[#252525] dark:hover:text-white font-medium"
           }`}
         >
-          <Ban className="h-3.5 w-3.5" />
+          <Ban className={`h-3.5 w-3.5 ${activeTab === "rejected" ? "text-white dark:text-zinc-950" : "text-rose-500"}`} />
           Rejected
           <span
             className={`rounded-full px-1.5 py-0.2 text-[10px] ${
-              activeTab === "rejected" ? "bg-rose-700 text-rose-100" : "bg-white text-slate-600"
+              activeTab === "rejected" ? "bg-black/10 text-slate-900 dark:bg-black/15 dark:text-zinc-950 font-bold" : "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-zinc-400"
             }`}
           >
             {rejectedUsers.length}

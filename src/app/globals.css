@@ -9,6 +9,7 @@
 body {
   @apply bg-surface text-slate-900 antialiased;
   font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .num {
@@ -16,12 +17,12 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid #4F46E5;
+  outline: 2px solid #18181b;
   outline-offset: 2px;
 }
 
 dialog::backdrop {
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(0, 0, 0, 0.6);
 }
 
 /* Universal sleek, slim, and subtle scrollbars across the entire application */
@@ -51,6 +52,564 @@ dialog::backdrop {
 
 ::-webkit-scrollbar-corner {
   background: transparent;
+}
+
+/* ========================================================================= */
+/* Humanized Obsidian/Carbon Dark Mode (Linear & Raycast Executive Design)   */
+/* 100% Pure Monochrome Neutral — Mathematically 0% Blue Saturation (R=G=B)  */
+/* ========================================================================= */
+
+.dark {
+  color-scheme: dark;
+}
+
+/* Base Canvas & App Frame (Pure Carbon #0a0a0a, 0% Blue) */
+.dark body {
+  background-color: #0a0a0a !important;
+  color: #ededef !important;
+}
+
+.dark .bg-surface {
+  background-color: #0a0a0a !important;
+}
+
+/* Elevated Cards, Modals, Panels, and Table Containers */
+.dark .bg-white {
+  background-color: #141414 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Secondary Surfaces, Headers, Filters, and Table theads */
+.dark .bg-slate-50,
+.dark .bg-slate-50\/50,
+.dark .bg-slate-50\/60,
+.dark .bg-slate-50\/70,
+.dark .bg-slate-50\/80,
+.dark .bg-slate-50\/90,
+.dark .bg-slate-100,
+.dark .bg-slate-100\/50,
+.dark .bg-slate-100\/90 {
+  background-color: #181818 !important;
+}
+
+/* Active Control Pills and Selected Filter States (High-Contrast Pure White Highlight) */
+.dark .bg-slate-900 {
+  background-color: #ffffff !important;
+  color: #09090b !important;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark .bg-slate-900 svg {
+  color: #09090b !important;
+  stroke: #09090b !important;
+}
+
+/* Hairline Micro-Borders (Pure Monochrome White Alpha) */
+.dark .border-slate-200,
+.dark .border-slate-300,
+.dark .border-slate-100 {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Tactile Neutral Hover States */
+.dark .hover\:bg-slate-50:hover,
+.dark .hover\:bg-slate-50\/70:hover,
+.dark .hover\:bg-slate-100:hover,
+.dark .hover\:bg-slate-200:hover {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Ergonomic Non-Glare Neutral Typography Hierarchy */
+.dark .text-slate-900 {
+  color: #ededef !important; /* Soft warm off-white, eliminates eye-fatigue glare */
+}
+
+.dark .text-slate-800 {
+  color: #e4e4e7 !important;
+}
+
+.dark .text-slate-700 {
+  color: #d4d4d8 !important;
+}
+
+.dark .text-slate-600 {
+  color: #a1a1aa !important; /* Clean neutral zinc */
+}
+
+.dark .text-slate-500 {
+  color: #a1a1aa !important;
+}
+
+.dark .text-slate-400 {
+  color: #71717a !important; /* Elegant metadata & sub-hint text */
+}
+
+/* ========================================================================= */
+/* ZERO BLUE TEXT & ZERO BLUE ACCENTS OVERRIDE                               */
+/* Eliminates generic AI Indigo/Blue text links, focus halos, and buttons    */
+/* ========================================================================= */
+
+/* Text Links & Action Labels (View →, View all expenses →, etc.) */
+.dark .text-brand-700,
+.dark .text-brand-600,
+.dark .text-brand-500,
+.dark a.text-brand-700,
+.dark a.text-brand-600,
+.dark button.text-brand-700 {
+  color: #a1a1aa !important;
+  transition: color 0.15s ease;
+}
+
+.dark a.text-brand-700:hover,
+.dark a.text-brand-600:hover,
+.dark button.text-brand-700:hover {
+  color: #ffffff !important;
+}
+
+/* Brand Logo (Ledgerly) */
+.dark aside .text-brand-700,
+.dark header .text-brand-700,
+.dark .text-brand-700.tracking-tight {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+/* Primary Action Buttons (Linear / Vercel Signature High-Contrast White Pill) */
+.dark .bg-brand-600,
+.dark .bg-brand-700 {
+  background-color: #f4f4f5 !important;
+  color: #0a0a0a !important;
+  font-weight: 600 !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.4) !important;
+}
+
+.dark .bg-brand-600:hover,
+.dark .bg-brand-700:hover {
+  background-color: #e4e4e7 !important;
+  color: #0a0a0a !important;
+}
+
+.dark .bg-brand-600 svg,
+.dark .bg-brand-700 svg {
+  color: #0a0a0a !important;
+  stroke: #0a0a0a !important;
+}
+
+/* Secondary Button Surfaces */
+.dark button.border-slate-300,
+.dark a.border-slate-200 {
+  background-color: #181818 !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  color: #e4e4e7 !important;
+}
+
+.dark button.border-slate-300:hover,
+.dark a.border-slate-200:hover {
+  background-color: #222222 !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+}
+
+/* Brand Background Badges & Highlights */
+.dark .bg-brand-50,
+.dark .bg-brand-50\/50,
+.dark .bg-brand-100 {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ededef !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.dark .border-brand-600,
+.dark .border-brand-500 {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.dark .ring-brand-600,
+.dark .ring-brand-500,
+.dark .ring-brand-600\/20,
+.dark .ring-brand-500\/30 {
+  --tw-ring-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Sidebar & Navigation (Linear Style Monochrome Dock) */
+.dark aside {
+  background-color: #0a0a0a !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Inactive items: completely flat, transparent background, no borders, no boxes */
+.dark aside a:not([aria-current="page"]) {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #a1a1aa !important;
+}
+
+.dark aside a:not([aria-current="page"]):hover {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  color: #ffffff !important;
+}
+
+/* Active item: subtle high-contrast highlight */
+.dark aside a[aria-current="page"] {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  font-weight: 600 !important;
+}
+
+.dark aside a[aria-current="page"] svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* ========================================================================= */
+/* Universal Segmented Filter / Range Capsule Pills (Reports Style)          */
+/* ========================================================================= */
+.filter-capsule {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  background-color: rgba(248, 250, 252, 0.7);
+  padding: 2px;
+  gap: 2px;
+}
+
+.dark .filter-capsule {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: #141414 !important;
+}
+
+.filter-pill-active {
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 600;
+  background-color: #4f46e5 !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease;
+  border: 1px solid transparent !important;
+  cursor: pointer;
+}
+
+.dark .filter-pill-active {
+  background-color: #f4f4f5 !important;
+  color: #0a0a0a !important;
+  font-weight: 700 !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4) !important;
+}
+
+.dark .filter-pill-active svg {
+  color: #0a0a0a !important;
+  stroke: #0a0a0a !important;
+}
+
+.filter-pill-inactive {
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 500;
+  color: #475569 !important;
+  background-color: transparent !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.filter-pill-inactive:hover {
+  color: #0f172a !important;
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+.dark .filter-pill-inactive {
+  color: #a1a1aa !important;
+  background-color: transparent !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+}
+
+.dark .filter-pill-inactive:hover {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.dark .filter-pill-inactive svg {
+  color: #71717a !important;
+}
+
+.dark .filter-pill-inactive:hover svg {
+  color: #ffffff !important;
+}
+
+/* Topbar Header & Mobile Bottom Bar */
+.dark header {
+  background-color: rgba(10, 10, 10, 0.88) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(8px);
+}
+
+.dark nav.fixed {
+  background-color: #0a0a0a !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Form Inputs, Dropdown Selects, and Textareas */
+.dark input:not([type="checkbox"]):not([type="radio"]),
+.dark select,
+.dark textarea {
+  background-color: #121212 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #ededef !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3) inset !important;
+}
+
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  outline: 2px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+.dark :focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.35) !important;
+  outline-offset: 2px;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #52525b !important;
+}
+
+.dark select option {
+  background-color: #141414 !important;
+  color: #ededef !important;
+}
+
+.dark input:disabled,
+.dark select:disabled {
+  background-color: #0e0e0e !important;
+  color: #52525b !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Native Modals & Dialogs */
+.dark dialog {
+  background-color: #141414 !important;
+  color: #ededef !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85) !important;
+}
+
+.dark dialog::backdrop {
+  background: rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(4px);
+}
+
+/* Table Header and Row Styling */
+.dark thead {
+  background-color: #181818 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark thead th {
+  background-color: #181818 !important;
+  color: #a1a1aa !important;
+}
+
+.dark tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+/* Financial P&L & Alert Cards - Radiant, Legible Natural Tints in Dark Mode */
+.dark .text-emerald-950,
+.dark .text-emerald-900,
+.dark .text-emerald-800,
+.dark .text-emerald-700,
+.dark .text-emerald-600 {
+  color: #34d399 !important; /* Soft radiant emerald */
+}
+
+.dark .bg-emerald-50,
+.dark .bg-emerald-50\/50,
+.dark .bg-emerald-50\/60,
+.dark .bg-emerald-50\/70,
+.dark .bg-emerald-50\/80,
+.dark .bg-emerald-50\/90,
+.dark .bg-emerald-100 {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+}
+
+.dark .border-emerald-200,
+.dark .border-emerald-300 {
+  border-color: rgba(16, 185, 129, 0.28) !important;
+}
+
+.dark .text-rose-950,
+.dark .text-rose-900,
+.dark .text-rose-800,
+.dark .text-rose-700,
+.dark .text-rose-600,
+.dark .text-rose-500,
+.dark .text-red-950,
+.dark .text-red-900,
+.dark .text-red-800,
+.dark .text-red-700,
+.dark .text-red-600,
+.dark .text-red-500 {
+  color: #fb7185 !important; /* Soft radiant crimson/rose */
+}
+
+.dark .bg-rose-50,
+.dark .bg-rose-50\/50,
+.dark .bg-rose-50\/60,
+.dark .bg-rose-50\/70,
+.dark .bg-rose-50\/80,
+.dark .bg-rose-50\/90,
+.dark .bg-rose-100,
+.dark .bg-red-50,
+.dark .bg-red-50\/50,
+.dark .bg-red-50\/60,
+.dark .bg-red-50\/70,
+.dark .bg-red-50\/80,
+.dark .bg-red-50\/90 {
+  background-color: rgba(244, 63, 94, 0.12) !important;
+}
+
+.dark .border-rose-200,
+.dark .border-rose-300,
+.dark .border-red-200,
+.dark .border-red-300 {
+  border-color: rgba(244, 63, 94, 0.28) !important;
+}
+
+.dark .text-amber-950,
+.dark .text-amber-900,
+.dark .text-amber-800 {
+  color: #fbbf24 !important; /* Radiant warm amber */
+}
+
+.dark .bg-amber-50,
+.dark .bg-amber-50\/50,
+.dark .bg-amber-50\/60,
+.dark .bg-amber-50\/70,
+.dark .bg-amber-50\/80,
+.dark .bg-amber-50\/90 {
+  background-color: rgba(245, 158, 11, 0.12) !important;
+}
+
+.dark .border-amber-200,
+.dark .border-amber-300 {
+  border-color: rgba(245, 158, 11, 0.28) !important;
+}
+
+.dark .text-brand-950,
+.dark .text-brand-900,
+.dark .text-brand-800 {
+  color: #ffffff !important; /* Pure high-contrast white */
+}
+
+/* Semantic Badges & Icon Overrides in Dark Mode */
+.dark .text-indigo-700,
+.dark .text-indigo-600 {
+  color: #ededef !important;
+}
+
+.dark .bg-indigo-50 {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ededef !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.dark .border-indigo-200 {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.dark .bg-violet-50 {
+  background-color: rgba(168, 85, 247, 0.12) !important;
+}
+
+.dark .border-violet-200 {
+  border-color: rgba(168, 85, 247, 0.25) !important;
+}
+
+.dark .text-violet-700 {
+  color: #c084fc !important;
+}
+
+.dark .bg-blue-50 {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark .border-blue-200 {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.dark .text-blue-700,
+.dark .text-blue-800 {
+  color: #ededef !important;
+}
+
+.dark .bg-amber-50 {
+  background-color: rgba(245, 158, 11, 0.12) !important;
+}
+
+.dark .border-amber-200 {
+  border-color: rgba(245, 158, 11, 0.25) !important;
+}
+
+.dark .text-amber-600,
+.dark .text-amber-700 {
+  color: #fbbf24 !important;
+}
+
+/* Charts & Tooltips (Recharts) */
+.dark .recharts-cartesian-grid-horizontal line,
+.dark .recharts-cartesian-grid-vertical line {
+  stroke: rgba(255, 255, 255, 0.07) !important;
+}
+
+.dark .recharts-default-tooltip {
+  background-color: #181818 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #ededef !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.6) !important;
+}
+
+.dark .recharts-tooltip-item {
+  color: #e4e4e7 !important;
+}
+
+/* Toast Notifications */
+.dark div[aria-live="polite"] > div {
+  background-color: #181818 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* 100% Monochrome Neutral Minimalist Scrollbars (0% Blue Saturation) */
+.dark * {
+  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.14);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.25);
 }
 
 @media (prefers-reduced-motion: reduce) {

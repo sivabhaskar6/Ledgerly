@@ -441,10 +441,10 @@ export function BorrowView() {
 
                         <td className="px-3 py-2 whitespace-nowrap">
                           <span
-                            className={`inline-flex items-center gap-0.5 rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
+                            className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase border ${
                               isLent
-                                ? "bg-emerald-100 text-emerald-800"
-                                : "bg-amber-100 text-amber-800"
+                                ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-400"
+                                : "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/15 dark:text-amber-400"
                             }`}
                           >
                             {isLent ? (
@@ -507,9 +507,9 @@ export function BorrowView() {
                                 type="button"
                                 onClick={() => setSettlingRecord(r)}
                                 title="Mark as Done (Settled)"
-                                className="inline-flex items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-2 py-1 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100 transition shadow-xs"
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white shadow-xs hover:bg-emerald-500 transition-all dark:bg-emerald-500 dark:text-zinc-950 dark:hover:bg-emerald-400 cursor-pointer"
                               >
-                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                <CheckCircle2 className="h-3.5 w-3.5 stroke-[2.5]" />
                                 Done
                               </button>
                             ) : (

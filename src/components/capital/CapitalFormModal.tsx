@@ -179,67 +179,67 @@ export function CapitalFormModal({
               <button
                 type="button"
                 onClick={() => setValue("mode", "add")}
-                className={`flex flex-col items-center justify-center rounded-lg border p-2.5 text-center transition-all ${
+                className={`flex flex-col items-center justify-center rounded-lg border p-2.5 text-center transition-all cursor-pointer ${
                   mode === "add"
-                    ? "border-emerald-600 bg-emerald-50 text-emerald-950 shadow-sm ring-1 ring-emerald-600"
-                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                    ? "border-emerald-600 bg-emerald-50 text-emerald-950 shadow-sm ring-1 ring-emerald-600 dark:border-emerald-500 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-500 font-semibold"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-white/10 dark:bg-[#141414] dark:text-zinc-400 dark:hover:bg-[#1c1c1c] dark:hover:text-white font-medium"
                 }`}
               >
                 <div className="flex items-center gap-1 font-semibold text-xs sm:text-sm">
-                  <Plus className="h-4 w-4 text-emerald-600" aria-hidden />
+                  <Plus className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden />
                   <span>Add to Capital</span>
                 </div>
-                <span className="mt-0.5 text-[11px] text-slate-500">Deposit / Growth</span>
+                <span className="mt-0.5 text-[11px] text-slate-500 dark:text-zinc-400">Deposit / Growth</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setValue("mode", "remove")}
-                className={`flex flex-col items-center justify-center rounded-lg border p-2.5 text-center transition-all ${
+                className={`flex flex-col items-center justify-center rounded-lg border p-2.5 text-center transition-all cursor-pointer ${
                   mode === "remove"
-                    ? "border-rose-600 bg-rose-50 text-rose-950 shadow-sm ring-1 ring-rose-600"
-                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                    ? "border-rose-600 bg-rose-50 text-rose-950 shadow-sm ring-1 ring-rose-600 dark:border-rose-500 dark:bg-rose-500/15 dark:text-rose-300 dark:ring-rose-500 font-semibold"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-white/10 dark:bg-[#141414] dark:text-zinc-400 dark:hover:bg-[#1c1c1c] dark:hover:text-white font-medium"
                 }`}
               >
                 <div className="flex items-center gap-1 font-semibold text-xs sm:text-sm">
-                  <Minus className="h-4 w-4 text-rose-600" aria-hidden />
+                  <Minus className="h-4 w-4 text-rose-600 dark:text-rose-400" aria-hidden />
                   <span>Remove from Capital</span>
                 </div>
-                <span className="mt-0.5 text-[11px] text-slate-500">Withdrawal</span>
+                <span className="mt-0.5 text-[11px] text-slate-500 dark:text-zinc-400">Withdrawal</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setValue("mode", "set")}
-                className={`flex flex-col items-center justify-center rounded-lg border p-2.5 text-center transition-all ${
+                className={`flex flex-col items-center justify-center rounded-lg border p-2.5 text-center transition-all cursor-pointer ${
                   mode === "set"
-                    ? "border-brand-600 bg-brand-50 text-brand-950 shadow-sm ring-1 ring-brand-600"
-                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                    ? "border-brand-600 bg-brand-50 text-brand-950 shadow-sm ring-1 ring-brand-600 dark:border-white/30 dark:bg-white/10 dark:text-white dark:ring-white/30 font-semibold"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-white/10 dark:bg-[#141414] dark:text-zinc-400 dark:hover:bg-[#1c1c1c] dark:hover:text-white font-medium"
                 }`}
               >
                 <div className="flex items-center gap-1 font-semibold text-xs sm:text-sm">
-                  <Sliders className="h-4 w-4 text-brand-600" aria-hidden />
+                  <Sliders className="h-4 w-4 text-brand-600 dark:text-white" aria-hidden />
                   <span>Set Exact Total</span>
                 </div>
-                <span className="mt-0.5 text-[11px] text-slate-500">Direct override</span>
+                <span className="mt-0.5 text-[11px] text-slate-500 dark:text-zinc-400">Direct override</span>
               </button>
             </div>
 
             {/* Dynamic Math Preview Card */}
-            <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-3 text-xs text-slate-600">
-              <div className="flex items-center justify-between text-slate-500">
+            <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-3 text-xs text-slate-600 dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300">
+              <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400">
                 <span>Existing Capital:</span>
-                <span className="num font-semibold text-slate-800">
+                <span className="num font-semibold text-slate-800 dark:text-white">
                   {formatINR(baselinePaise!)}
                 </span>
               </div>
 
               {mode !== "set" && (
-                <div className="mt-1 flex items-center justify-between">
+                <div className="mt-1 flex items-center justify-between text-slate-500 dark:text-zinc-400">
                   <span>{mode === "add" ? "Amount to add:" : "Amount to remove:"}</span>
                   <span
                     className={`num font-semibold ${
-                      mode === "add" ? "text-emerald-700" : "text-rose-700"
+                      mode === "add" ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"
                     }`}
                   >
                     {calculation.enteredPaise !== null
@@ -251,24 +251,24 @@ export function CapitalFormModal({
                 </div>
               )}
 
-              <div className="mt-2 flex items-center justify-between border-t border-slate-200 pt-2">
-                <span className="font-semibold text-slate-900">New Total Capital:</span>
-                <span className="num text-base font-bold text-slate-900">
+              <div className="mt-2 flex items-center justify-between border-t border-slate-200 pt-2 dark:border-white/10">
+                <span className="font-semibold text-slate-900 dark:text-white">New Total Capital:</span>
+                <span className="num text-base font-bold text-slate-900 dark:text-white">
                   {calculation.resultingPaise !== null
                     ? formatINR(calculation.resultingPaise)
                     : "—"}
                 </span>
               </div>
-
-              {calculation.overdraft && (
-                <div className="mt-2 flex items-center gap-1.5 text-xs text-rose-700">
-                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                  <span>
-                    Cannot remove more than existing capital ({formatINR(baselinePaise!)}).
-                  </span>
-                </div>
-              )}
             </div>
+
+            {calculation.overdraft && (
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-rose-700">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                <span>
+                  Cannot remove more than existing capital ({formatINR(baselinePaise!)}).
+                </span>
+              </div>
+            )}
           </div>
         )}
 

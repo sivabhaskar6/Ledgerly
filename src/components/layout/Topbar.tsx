@@ -1,13 +1,15 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { LogOut, Sun, Moon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/Toast";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 export function Topbar({ name }: { name: string }) {
   const router = useRouter();
   const { notify } = useToast();
+  const { theme, toggleTheme } = useTheme();
   const [busy, setBusy] = useState(false);
 
   async function logout() {
@@ -22,13 +24,41 @@ export function Topbar({ name }: { name: string }) {
       setBusy(false);
     }
   }
+
+  const handleToggle = () => {
+    toggleTheme();
+    notify(
+      "success",
+      theme === "dark" ? "Switched to Light Mode." : "Switched to Dark Mode."
+    );
+  };
+
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-6">
-      <span className="text-lg font-semibold text-brand-700 md:hidden">Ledgerly</span>
-      <span className="hidden text-sm text-slate-500 md:block">{name}</span>
-      <button onClick={logout} disabled={busy} className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 disabled:opacity-60">
-        <LogOut className="h-4 w-4" aria-hidden />Log out
-      </button>
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-6 dark:border-white/10 dark:bg-[#0a0a0a]/90 backdrop-blur-md">
+      <span className="text-lg font-bold text-brand-700 dark:text-white md:hidden">Ledgerly</span>
+      <span className="hidden text-sm text-slate-500 dark:text-zinc-400 md:block">{name}</span>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={handleToggle}
+          aria-label={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors dark:border-white/10 dark:bg-[#141414] dark:text-zinc-300 dark:hover:bg-[#222222] dark:hover:text-white"
+        >
+          {theme === "dark" ? (
+            <Sun className="h-4 w-4 text-amber-400" />
+          ) : (
+            <Moon className="h-4 w-4 text-slate-600" />
+          )}
+        </button>
+        <button
+          onClick={logout}
+          disabled={busy}
+          className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 disabled:opacity-60 transition-colors dark:text-zinc-300 dark:hover:bg-white/[0.06] dark:hover:text-white"
+        >
+          <LogOut className="h-4 w-4" aria-hidden />
+          Log out
+        </button>
+      </div>
     </header>
   );
 }

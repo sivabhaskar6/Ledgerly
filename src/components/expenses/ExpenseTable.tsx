@@ -57,7 +57,7 @@ export function ExpenseTable({ rows, sort, dir, onSort, onView, onEdit, onDelete
                 <td className="px-4 py-2 font-semibold text-slate-900">{e.title}</td>
                 <td className="num whitespace-nowrap px-4 py-2 text-slate-600">{displayDate(e.occurred_on)}</td>
                 <td className="max-w-[16rem] truncate px-4 py-2 text-slate-500" title={e.note ?? undefined}>{e.note ?? ""}</td>
-                <td className="num whitespace-nowrap px-4 py-2 text-right font-bold text-red-600">{formatINR(e.amount_paise)}</td>
+                <td className="num whitespace-nowrap px-4 py-2 text-right font-bold text-rose-700">{formatINR(e.amount_paise)}</td>
                 <td className="px-2 py-1"><Actions e={e} onView={onView} onEdit={onEdit} onDelete={onDelete} /></td>
               </tr>
             ))}
@@ -73,7 +73,7 @@ export function ExpenseTable({ rows, sort, dir, onSort, onView, onEdit, onDelete
                 <p className="truncate font-medium">{e.title}</p>
                 <p className="mt-0.5 text-xs text-slate-500">{e.category?.name ?? "—"} · {displayDate(e.occurred_on)}</p>
               </div>
-              <p className="num shrink-0 font-semibold text-red-600">{formatINR(e.amount_paise)}</p>
+              <p className="num shrink-0 font-semibold text-rose-700">{formatINR(e.amount_paise)}</p>
             </div>
             {e.note && <p className="mt-1 line-clamp-2 text-xs text-slate-500">{e.note}</p>}
             <div className="mt-1 border-t border-slate-100 pt-1"><Actions e={e} onView={onView} onEdit={onEdit} onDelete={onDelete} /></div>

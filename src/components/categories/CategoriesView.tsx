@@ -64,21 +64,19 @@ export function CategoriesView() {
         </Button>
       </div>
 
-      <div className="mb-2 flex flex-wrap gap-1.5 shrink-0" role="group" aria-label="Date range">
-        {RANGES.map((r) => (
-          <button
-            key={r.key}
-            onClick={() => setRange(r.key)}
-            aria-pressed={range === r.key}
-            className={`h-8 rounded-lg border px-3 text-xs font-medium transition shadow-xs ${
-              range === r.key
-                ? "border-brand-600 bg-brand-50 text-brand-700 font-semibold"
-                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-            }`}
-          >
-            {r.label}
-          </button>
-        ))}
+      <div className="mb-2 flex items-center shrink-0" role="group" aria-label="Date range">
+        <div className="filter-capsule">
+          {RANGES.map((r) => (
+            <button
+              key={r.key}
+              onClick={() => setRange(r.key)}
+              aria-pressed={range === r.key}
+              className={range === r.key ? "filter-pill-active" : "filter-pill-inactive"}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {error && (

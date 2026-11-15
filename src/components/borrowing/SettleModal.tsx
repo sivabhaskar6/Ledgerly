@@ -76,28 +76,28 @@ export function SettleModal({
           </div>
         )}
 
-        <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 text-xs text-slate-700">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-xs text-slate-700 dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300">
           <div className="flex items-center justify-between">
-            <span className="font-semibold text-slate-900">{record.person_name}</span>
+            <span className="font-bold text-slate-900 dark:text-white text-sm">{record.person_name}</span>
             <span
-              className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+              className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase border ${
                 isLent
-                  ? "bg-emerald-100 text-emerald-800"
-                  : "bg-amber-100 text-amber-800"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-400"
+                  : "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/15 dark:text-amber-400"
               }`}
             >
               {isLent ? "You Lent / Gave" : "You Borrowed / Took"}
             </span>
           </div>
-          <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-slate-500">
+          <div className="mt-2.5 flex items-baseline justify-between border-t border-slate-200/60 pt-2 dark:border-white/10">
+            <span className="text-slate-500 dark:text-zinc-400">
               {isLent ? "Amount received back:" : "Amount repaid:"}
             </span>
-            <span className="num text-base font-bold text-slate-900">
+            <span className="num text-lg font-bold text-slate-900 dark:text-white">
               {formatINR(record.amount_paise)}
             </span>
           </div>
-          <p className="mt-1 text-[11px] text-slate-500">
+          <p className="mt-1 text-[11px] text-slate-500 dark:text-zinc-500">
             Originally recorded on {displayDate(record.occurred_on)}
           </p>
         </div>
