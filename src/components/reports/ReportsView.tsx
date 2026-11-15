@@ -456,7 +456,7 @@ export function ReportsView() {
                             className="hover:bg-slate-50/70 transition"
                           >
                             <td className="px-4 py-2 font-medium text-slate-900">
-                              <span className="inline-block h-2 w-2 rounded-full bg-brand-500 mr-2" />
+                              <span className="inline-block h-2 w-2 "/>
                               {c.categoryName}
                             </td>
                             <td className="num px-4 py-2 text-right font-semibold text-slate-800">
