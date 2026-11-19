@@ -15,6 +15,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   IndianRupee,
+  Upload,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -34,6 +35,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast";
 import { FnoFormModal } from "./FnoFormModal";
+import { FnoContractNoteModal } from "./FnoContractNoteModal";
 
 export function FnoView() {
   const { notify } = useToast();
@@ -44,6 +46,7 @@ export function FnoView() {
 
   // Form & Delete State
   const [formOpen, setFormOpen] = useState(false);
+  const [contractNoteModalOpen, setContractNoteModalOpen] = useState(false);
   const [editingTrade, setEditingTrade] = useState<FnoTradeWithRefs | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FnoTradeWithRefs | null>(null);
 
@@ -255,17 +258,27 @@ export function FnoView() {
           </p>
         </div>
 
-        {/* Action: Single prominent button on the right */}
-        <Button
-          onClick={() => {
-            setEditingTrade(null);
-            setFormOpen(true);
-          }}
-          className="h-9 px-3.5 text-xs font-semibold shadow-xs"
-        >
-          <Plus className="h-4 w-4" aria-hidden />
-          Record F&O trade
-        </Button>
+        {/* Actions on the right */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            onClick={() => setContractNoteModalOpen(true)}
+            className="h-9 px-3.5 text-xs font-semibold shadow-xs gap-1.5"
+          >
+            <Upload className="h-4 w-4" aria-hidden />
+            Upload Contract Note
+          </Button>
+          <Button
+            onClick={() => {
+              setEditingTrade(null);
+              setFormOpen(true);
+            }}
+            className="h-9 px-3.5 text-xs font-semibold shadow-xs"
+          >
+            <Plus className="h-4 w-4" aria-hidden />
+            Record F&O trade
+          </Button>
+        </div>
       </div>
 
       {data?.tableMissing && (
@@ -700,6 +713,14 @@ export function FnoView() {
         accounts={accounts}
         onClose={() => setFormOpen(false)}
         onSaved={() => void load()}
+        notify={notify}
+      />
+
+      <FnoContractNoteModal
+        open={contractNoteModalOpen}
+        accounts={accounts}
+        onClose={() => setContractNoteModalOpen(false)}
+        onImported={() => void load()}
         notify={notify}
       />
 
