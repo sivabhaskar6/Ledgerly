@@ -108,26 +108,26 @@ export function AccountsView() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+      <div className="mb-2 sm:mb-2.5 flex flex-wrap items-center justify-between gap-2 sm:gap-3 shrink-0">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">Accounts & Liquidity</h1>
-          <p className="mt-0.5 text-xs text-slate-500">Monitor bank balances, cash in hand, and brokerage accounts.</p>
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">Accounts & Liquidity</h1>
+          <p className="mt-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400">Monitor bank balances, cash in hand, and brokerage accounts.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <Button
             variant="secondary"
             onClick={() => setTransferOpen(true)}
             disabled={activeAccounts.length < 2}
-            className="h-9 px-3 text-xs font-medium shadow-xs"
+            className="h-8 sm:h-9 px-2.5 sm:px-3 text-xs font-medium shadow-xs"
           >
-            <ArrowRightLeft className="h-4 w-4" aria-hidden />
-            Transfer money
+            <ArrowRightLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />
+            Transfer<span className="hidden sm:inline"> money</span>
           </Button>
           <Button
             onClick={() => { setEditing(null); setFormOpen(true); }}
-            className="h-9 px-3.5 text-xs font-semibold shadow-xs"
+            className="h-8 sm:h-9 px-2.5 sm:px-3.5 text-xs font-semibold shadow-xs"
           >
-            <Plus className="h-4 w-4" aria-hidden />
+            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />
             Add account
           </Button>
         </div>
@@ -140,41 +140,41 @@ export function AccountsView() {
       )}
 
       {/* Summary Cards */}
-      <div className="mb-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-3 shrink-0">
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
-          <p className="text-[11px] font-medium text-slate-500">Liquid Cash & Bank</p>
+      <div className="mb-2 grid grid-cols-2 gap-2 sm:grid-cols-3 shrink-0">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
+          <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Liquid Cash & Bank</p>
           {loading && !data ? (
             <Skeleton className="mt-1 h-6 w-24" />
           ) : (
-            <p className="num mt-0.5 text-lg font-bold md:text-xl text-slate-900">
+            <p className="num mt-0.5 text-base sm:text-lg font-bold md:text-xl text-slate-900 dark:text-white">
               {formatINR(data?.totalLiquidPaise ?? 0)}
             </p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">Available across checking & cash</p>
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">Checking & cash</p>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
-          <p className="text-[11px] font-medium text-slate-500">Brokerage & Demat</p>
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
+          <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Brokerage & Demat</p>
           {loading && !data ? (
             <Skeleton className="mt-1 h-6 w-24" />
           ) : (
-            <p className="num mt-0.5 text-lg font-bold md:text-xl text-purple-700">
+            <p className="num mt-0.5 text-base sm:text-lg font-bold md:text-xl text-purple-700 dark:text-purple-400">
               {formatINR(data?.totalBrokeragePaise ?? 0)}
             </p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">Trading cash balance</p>
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">Trading cash balance</p>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
-          <p className="text-[11px] font-medium text-slate-500">Net Liquid Balance</p>
+        <div className="col-span-2 sm:col-span-1 rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
+          <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Net Liquid Balance</p>
           {loading && !data ? (
             <Skeleton className="mt-1 h-6 w-24" />
           ) : (
-            <p className="num mt-0.5 text-lg font-bold md:text-xl text-indigo-700">
+            <p className="num mt-0.5 text-base sm:text-lg font-bold md:text-xl text-indigo-700 dark:text-indigo-400">
               {formatINR(data?.netWorthPaise ?? 0)}
             </p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">Total in all active accounts</p>
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">Total in all accounts</p>
         </div>
       </div>
 

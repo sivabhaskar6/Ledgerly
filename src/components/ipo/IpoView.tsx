@@ -182,19 +182,19 @@ export function IpoView() {
   return (
     <div className="flex flex-col flex-1 min-h-0">
       {/* Header Bar */}
-      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+      <div className="mb-2 sm:mb-2.5 flex flex-wrap items-center justify-between gap-2 sm:gap-3 shrink-0">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">IPO Listing Gains</h1>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">IPO Listing Gains</h1>
+          <p className="mt-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400">
             Track IPO applications, allotment issue prices, sold listing day prices, and realized listing gains or discounts.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <Link
             href="/income"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition"
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300"
           >
-            <IndianRupee className="h-3.5 w-3.5 text-slate-600" />
+            <IndianRupee className="h-3.5 w-3.5 text-slate-600 dark:text-zinc-400" />
             <span>View Income</span>
           </Link>
           <Button
@@ -202,9 +202,9 @@ export function IpoView() {
               setEditingTrade(null);
               setFormOpen(true);
             }}
-            className="h-9 px-3.5 text-xs font-semibold shadow-xs"
+            className="h-8 sm:h-9 px-2.5 sm:px-3.5 text-xs font-semibold shadow-xs"
           >
-            <Rocket className="h-4 w-4 mr-1.5" aria-hidden />
+            <Rocket className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" aria-hidden />
             Record IPO gain
           </Button>
         </div>
@@ -236,41 +236,41 @@ export function IpoView() {
       {/* KPI Cards Grid */}
       <div className="mb-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6 shrink-0">
         {/* Total Net Realized P&L */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-slate-500">Net Listing Gain</span>
+            <span className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Net Listing Gain</span>
             {loading ? null : isTotalNetPos ? (
-              <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
+              <TrendingUp className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
             ) : (
-              <TrendingDown className="h-3.5 w-3.5 text-rose-600" />
+              <TrendingDown className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
             )}
           </div>
           {loading ? (
             <Skeleton className="mt-1 h-6 w-20" />
           ) : (
             <p
-              className={`num mt-0.5 text-lg font-bold md:text-xl ${
-                isTotalNetPos ? "text-emerald-700" : "text-rose-700"
+              className={`num mt-0.5 text-base sm:text-lg font-bold md:text-xl ${
+                isTotalNetPos ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"
               }`}
             >
               {isTotalNetPos ? `+${formatINR(totalNet)}` : formatINR(totalNet)}
             </p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">Synced to Income</p>
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">Synced to Income</p>
         </div>
 
         {/* Today Net P&L */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-slate-500">Today&apos;s Gain</span>
-            <Activity className="h-3.5 w-3.5 text-slate-400" />
+            <span className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Today&apos;s Gain</span>
+            <Activity className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 shrink-0" />
           </div>
           {loading ? (
             <Skeleton className="mt-1 h-6 w-20" />
           ) : (
             <p
-              className={`num mt-0.5 text-lg font-bold md:text-xl ${
-                kpiMetrics.todayNetPnlPaise >= 0 ? "text-emerald-700" : "text-rose-700"
+              className={`num mt-0.5 text-base sm:text-lg font-bold md:text-xl ${
+                kpiMetrics.todayNetPnlPaise >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"
               }`}
             >
               {kpiMetrics.todayNetPnlPaise >= 0
@@ -278,84 +278,84 @@ export function IpoView() {
                 : formatINR(kpiMetrics.todayNetPnlPaise)}
             </p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">
             {kpiMetrics.todayCount} listed today
           </p>
         </div>
 
         {/* Win Rate */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-slate-500">Success Rate</span>
-            <Award className="h-3.5 w-3.5 text-amber-500" />
+            <span className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Success Rate</span>
+            <Award className="h-3.5 w-3.5 text-amber-500 shrink-0" />
           </div>
           {loading ? (
             <Skeleton className="mt-1 h-6 w-16" />
           ) : (
-            <p className="num mt-0.5 text-lg font-bold text-slate-900 md:text-xl">
+            <p className="num mt-0.5 text-base sm:text-lg font-bold text-slate-900 md:text-xl dark:text-white">
               {kpiMetrics.winRatePct !== null && kpiMetrics.winRatePct !== undefined
                 ? `${kpiMetrics.winRatePct}%`
                 : "—"}
             </p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">
             {kpiMetrics.profitableCount}W / {kpiMetrics.totalCount} total
           </p>
         </div>
 
         {/* Total Capital Invested */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-slate-500">Capital Invested</span>
-            <ArrowDownRight className="h-3.5 w-3.5 text-slate-400" />
+            <span className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Capital Invested</span>
+            <ArrowDownRight className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 shrink-0" />
           </div>
           {loading ? (
             <Skeleton className="mt-1 h-6 w-20" />
           ) : (
-            <p className="num mt-0.5 text-lg font-bold text-slate-900 md:text-xl">
+            <p className="num mt-0.5 text-base sm:text-lg font-bold text-slate-900 md:text-xl dark:text-white">
               {formatINR(kpiMetrics.totalInvestedPaise)}
             </p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">Issue allotment cost</p>
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">Issue allotment cost</p>
         </div>
 
         {/* Total Realized / Sold */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-slate-500">Total Realized</span>
-            <ArrowUpRight className="h-3.5 w-3.5 text-slate-400" />
+            <span className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Total Realized</span>
+            <ArrowUpRight className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 shrink-0" />
           </div>
           {loading ? (
             <Skeleton className="mt-1 h-6 w-20" />
           ) : (
-            <p className="num mt-0.5 text-lg font-bold text-slate-900 md:text-xl">
+            <p className="num mt-0.5 text-base sm:text-lg font-bold text-slate-900 md:text-xl dark:text-white">
               {formatINR(kpiMetrics.totalSoldPaise)}
             </p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">Listing sale value</p>
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">Listing sale value</p>
         </div>
 
         {/* Total Charges */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-slate-500">Charges & Taxes</span>
-            <TrendingDown className="h-3.5 w-3.5 text-slate-400" />
+            <span className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Charges & Taxes</span>
+            <TrendingDown className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 shrink-0" />
           </div>
           {loading ? (
             <Skeleton className="mt-1 h-6 w-20" />
           ) : (
-            <p className="num mt-0.5 text-lg font-bold text-slate-700 md:text-xl">
+            <p className="num mt-0.5 text-base sm:text-lg font-bold text-slate-700 md:text-xl dark:text-zinc-300">
               {formatINR(kpiMetrics.totalChargesPaise)}
             </p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">STT, Brokerage & GST</p>
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">STT, Brokerage & GST</p>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-xs shrink-0">
-        <div className="relative min-w-[14rem] flex-1 flex items-center">
-          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-xs shrink-0 dark:border-white/10 dark:bg-[#141414]">
+        <div className="relative w-full sm:w-auto sm:min-w-[14rem] sm:flex-1 flex items-center">
+          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
           <input
             type="text"
             value={search}

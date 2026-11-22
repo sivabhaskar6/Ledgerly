@@ -53,10 +53,12 @@ export function Topbar({ name }: { name: string }) {
         <button
           onClick={logout}
           disabled={busy}
-          className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 disabled:opacity-60 transition-colors dark:text-zinc-300 dark:hover:bg-white/[0.06] dark:hover:text-white"
+          aria-label="Log out"
+          title="Log out"
+          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 sm:px-3 text-sm text-slate-700 hover:bg-slate-100 disabled:opacity-60 transition-colors dark:text-zinc-300 dark:hover:bg-white/[0.06] dark:hover:text-white"
         >
           <LogOut className="h-4 w-4" aria-hidden />
-          Log out
+          <span className="hidden sm:inline">Log out</span>
         </button>
       </div>
     </header>

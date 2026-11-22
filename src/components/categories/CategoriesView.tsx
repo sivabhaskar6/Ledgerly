@@ -54,13 +54,13 @@ export function CategoriesView() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+      <div className="mb-2 sm:mb-2.5 flex flex-wrap items-center justify-between gap-2 sm:gap-3 shrink-0">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">Spending categories</h1>
-          <p className="mt-0.5 text-xs text-slate-500">See where your money goes and manage your categories.</p>
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">Spending categories</h1>
+          <p className="mt-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400">See where your money goes and manage your categories.</p>
         </div>
-        <Button onClick={() => setEditing("new")} className="h-9 px-3.5 text-xs font-semibold shadow-xs">
-          <Plus className="h-4 w-4" aria-hidden />Add category
+        <Button onClick={() => setEditing("new")} className="h-8 sm:h-9 px-2.5 sm:px-3.5 text-xs font-semibold shadow-xs">
+          <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />Add category
         </Button>
       </div>
 

@@ -97,12 +97,12 @@ export function TrendsView() {
   return (
     <div className="flex flex-col flex-1 min-h-0">
       {/* Header Bar (Fixed) */}
-      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+      <div className="mb-2 sm:mb-2.5 flex flex-wrap items-center justify-between gap-2 sm:gap-3 shrink-0">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">
             Monthly Trends & Analytics
           </h1>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <p className="mt-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400">
             Daily patterns, month-over-month comparisons, and category distribution.
           </p>
         </div>
@@ -113,10 +113,10 @@ export function TrendsView() {
             onClick={prevMonth}
             aria-label="Previous month"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
-          <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-800 shadow-xs">
-            <Calendar className="h-3.5 w-3.5 text-brand-600" />
+          <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 sm:px-3 py-1 text-xs font-semibold text-slate-800 shadow-xs dark:border-white/10 dark:bg-[#141414] dark:text-zinc-200">
+            <Calendar className="h-3.5 w-3.5 text-brand-600 dark:text-brand-400" />
             <span>
               {MONTHS[monthIndex]} {year}
             </span>
@@ -127,7 +127,7 @@ export function TrendsView() {
             onClick={nextMonth}
             aria-label="Next month"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
         </div>
       </div>
@@ -145,56 +145,56 @@ export function TrendsView() {
       )}
 
       {/* KPI Cards (Fixed) */}
-      <dl className="mb-2.5 grid grid-cols-2 gap-2.5 lg:grid-cols-4 shrink-0">
+      <dl className="mb-2 grid grid-cols-2 gap-2 lg:grid-cols-4 shrink-0">
         {/* Total Spent */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <dt className="text-[11px] font-medium text-slate-500">
-              Total Spent in {MONTHS[monthIndex]}
+            <dt className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400 truncate">
+              Total in {MONTHS[monthIndex]}
             </dt>
-            <Receipt className="h-3.5 w-3.5 text-rose-500" />
+            <Receipt className="h-3.5 w-3.5 text-rose-500 shrink-0" />
           </div>
-          <dd className="num mt-0.5 text-lg font-bold text-slate-900 md:text-xl">
+          <dd className="num mt-0.5 text-base sm:text-lg font-bold text-slate-900 md:text-xl dark:text-white">
             {loading && !data ? (
               <Skeleton className="mt-1 h-6 w-20" />
             ) : (
               formatINR(data?.selectedMonthTotalPaise ?? 0)
             )}
           </dd>
-          <p className="text-[10px] text-slate-400 truncate">
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">
             Total monthly expenses
           </p>
         </div>
 
         {/* Daily Average */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <dt className="text-[11px] font-medium text-slate-500">
-              Average Daily Spend
+            <dt className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400 truncate">
+              Average Daily
             </dt>
-            <Calendar className="h-3.5 w-3.5 text-slate-400" />
+            <Calendar className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 shrink-0" />
           </div>
-          <dd className="num mt-0.5 text-lg font-bold text-slate-900 md:text-xl">
+          <dd className="num mt-0.5 text-base sm:text-lg font-bold text-slate-900 md:text-xl dark:text-white">
             {loading && !data ? (
               <Skeleton className="mt-1 h-6 w-20" />
             ) : (
               formatINR(data?.dailyAveragePaise ?? 0)
             )}
           </dd>
-          <p className="text-[10px] text-slate-400 truncate">
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">
             Prorated per elapsed day
           </p>
         </div>
 
         {/* Highest Spend Day */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <dt className="text-[11px] font-medium text-slate-500">
-              Highest Spend Day
+            <dt className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400 truncate">
+              Highest Day
             </dt>
-            <Award className="h-3.5 w-3.5 text-amber-500" />
+            <Award className="h-3.5 w-3.5 text-amber-500 shrink-0" />
           </div>
-          <dd className="num mt-0.5 text-lg font-bold text-slate-900 md:text-xl">
+          <dd className="num mt-0.5 text-base sm:text-lg font-bold text-slate-900 md:text-xl dark:text-white">
             {loading && !data ? (
               <Skeleton className="mt-1 h-6 w-20" />
             ) : data?.highestDay ? (
@@ -203,31 +203,31 @@ export function TrendsView() {
               "—"
             )}
           </dd>
-          <p className="text-[10px] text-slate-400 truncate">
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">
             {data?.highestDay ? displayDate(data.highestDay.date) : "No peak spend day"}
           </p>
         </div>
 
         {/* MoM Delta */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <dt className="text-[11px] font-medium text-slate-500">
-              Month-over-Month Delta
+            <dt className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400 truncate">
+              MoM Delta
             </dt>
             {data?.momChangePct !== null && data?.momChangePct !== undefined ? (
               data.momChangePct <= 0 ? (
-                <TrendingDown className="h-3.5 w-3.5 text-emerald-600" />
+                <TrendingDown className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
               ) : (
-                <TrendingUp className="h-3.5 w-3.5 text-rose-600" />
+                <TrendingUp className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
               )
             ) : null}
           </div>
           <dd
-            className={`num mt-0.5 text-lg font-bold md:text-xl ${
+            className={`num mt-0.5 text-base sm:text-lg font-bold md:text-xl ${
               data?.momChangePct !== null && data?.momChangePct !== undefined
                 ? data.momChangePct <= 0
-                  ? "text-emerald-700"
-                  : "text-rose-700"
+                  ? "text-emerald-700 dark:text-emerald-400"
+                  : "text-rose-700 dark:text-rose-400"
                 : "text-slate-900"
             }`}
           >

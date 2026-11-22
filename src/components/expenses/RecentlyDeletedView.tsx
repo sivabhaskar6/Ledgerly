@@ -99,10 +99,10 @@ export function RecentlyDeletedView() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+      <div className="mb-2 sm:mb-2.5 flex flex-wrap items-center justify-between gap-2 sm:gap-3 shrink-0">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">Recently deleted</h1>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">Recently deleted</h1>
+          <p className="mt-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400">
             Deleted expenses, income entries, F&O trades, IPO listing gains, and borrow & lend records stay here until removed permanently. They do not count toward any totals.
           </p>
         </div>

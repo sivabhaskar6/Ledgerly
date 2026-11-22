@@ -133,16 +133,16 @@ export function UserApprovalsView() {
   return (
     <div className="flex flex-col flex-1 min-h-0">
       {/* Header Bar */}
-      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+      <div className="mb-2 sm:mb-2.5 flex flex-wrap items-center justify-between gap-2 sm:gap-3 shrink-0">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-slate-900">User Approvals & Access</h1>
-            <span className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-700">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">User Approvals & Access</h1>
+            <span className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300">
               <ShieldCheck className="h-3 w-3" />
               Admin Only
             </span>
           </div>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <p className="mt-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400">
             Review and manage access for friends or new users who register to use your Ledgerly instance.
           </p>
         </div>
@@ -150,73 +150,73 @@ export function UserApprovalsView() {
           variant="secondary"
           onClick={() => void loadData()}
           loading={loading}
-          className="h-9 gap-1.5 px-3.5 text-xs font-semibold shadow-xs"
+          className="h-8 sm:h-9 gap-1.5 px-2.5 sm:px-3.5 text-xs font-semibold shadow-xs"
         >
           <RefreshCw className="h-3.5 w-3.5" />
-          Refresh
+          <span className="hidden sm:inline">Refresh</span>
         </Button>
       </div>
 
       {/* KPI Cards Grid */}
       <div className="mb-2 grid grid-cols-2 gap-2 sm:grid-cols-4 shrink-0">
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-slate-500">Approved Users</span>
-            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+            <span className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Approved Users</span>
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
           </div>
           {loading ? (
             <Skeleton className="mt-1 h-6 w-14" />
           ) : (
-            <p className="num mt-0.5 text-lg font-bold text-emerald-700 md:text-xl">
+            <p className="num mt-0.5 text-base sm:text-lg font-bold text-emerald-700 md:text-xl dark:text-emerald-400">
               {approvedUsers.length}
             </p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">Have active system access</p>
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">Have active system access</p>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-slate-500">Pending Requests</span>
-            <Clock className="h-3.5 w-3.5 text-amber-500" />
+            <span className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Pending Requests</span>
+            <Clock className="h-3.5 w-3.5 text-amber-500 shrink-0" />
           </div>
           {loading ? (
             <Skeleton className="mt-1 h-6 w-14" />
           ) : (
-            <p className="num mt-0.5 text-lg font-bold text-amber-600 md:text-xl">
+            <p className="num mt-0.5 text-base sm:text-lg font-bold text-amber-600 md:text-xl dark:text-amber-400">
               {pendingUsers.length}
             </p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">Awaiting your approval</p>
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">Awaiting your approval</p>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-slate-500">Rejected Requests</span>
-            <Ban className="h-3.5 w-3.5 text-rose-500" />
+            <span className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Rejected Requests</span>
+            <Ban className="h-3.5 w-3.5 text-rose-500 shrink-0" />
           </div>
           {loading ? (
             <Skeleton className="mt-1 h-6 w-14" />
           ) : (
-            <p className="num mt-0.5 text-lg font-bold text-rose-700 md:text-xl">
+            <p className="num mt-0.5 text-base sm:text-lg font-bold text-rose-700 md:text-xl dark:text-rose-400">
               {rejectedUsers.length}
             </p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">Denied with cooldown timer</p>
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">Denied with cooldown timer</p>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-slate-500">Total Registered</span>
-            <Users className="h-3.5 w-3.5 text-slate-400" />
+            <span className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Total Registered</span>
+            <Users className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 shrink-0" />
           </div>
           {loading ? (
             <Skeleton className="mt-1 h-6 w-14" />
           ) : (
-            <p className="num mt-0.5 text-lg font-bold text-slate-900 md:text-xl">
+            <p className="num mt-0.5 text-base sm:text-lg font-bold text-slate-900 md:text-xl dark:text-white">
               {users.length}
             </p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">Total user accounts</p>
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">Total user accounts</p>
         </div>
       </div>
 

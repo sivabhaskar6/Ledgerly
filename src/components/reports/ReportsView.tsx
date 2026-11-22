@@ -171,32 +171,32 @@ export function ReportsView() {
   return (
     <div className="flex flex-col flex-1 min-h-0">
       {/* Top Header Bar (Fixed) */}
-      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+      <div className="mb-2 sm:mb-2.5 flex flex-wrap items-center justify-between gap-2 sm:gap-3 shrink-0">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">
             Financial Reports
           </h1>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <p className="mt-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400">
             Audited spending summaries, P&L breakdown, and multi-sheet statement exports.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <Button
             variant="secondary"
             onClick={handleExportCSV}
             disabled={loading || (report?.transactions.length ?? 0) === 0}
-            className="h-9 px-3 text-xs font-semibold shadow-xs"
+            className="h-8 sm:h-9 px-2.5 sm:px-3 text-xs font-semibold shadow-xs"
           >
-            <FileText className="h-3.5 w-3.5 mr-1 text-slate-600" aria-hidden />
-            Export CSV
+            <FileText className="h-3.5 w-3.5 mr-1 text-slate-600 dark:text-zinc-400" aria-hidden />
+            CSV
           </Button>
           <Button
             onClick={handleExportExcel}
             disabled={loading || (report?.transactions.length ?? 0) === 0}
-            className="h-9 px-3 text-xs font-semibold shadow-xs"
+            className="h-8 sm:h-9 px-2.5 sm:px-3 text-xs font-semibold shadow-xs"
           >
             <FileSpreadsheet className="h-3.5 w-3.5 mr-1" aria-hidden />
-            Export Excel (.xlsx)
+            Excel
           </Button>
         </div>
       </div>
@@ -214,8 +214,8 @@ export function ReportsView() {
       )}
 
       {/* Filter Bar (Fixed) */}
-      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2.5 rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs shrink-0">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-xs shrink-0 dark:border-white/10 dark:bg-[#141414]">
+        <div className="flex flex-wrap items-center gap-1.5">
           <div className="filter-capsule">
             <button
               onClick={() => setPreset("month")}
@@ -239,34 +239,34 @@ export function ReportsView() {
               onClick={() => setPreset("custom")}
               className={preset === "custom" ? "filter-pill-active" : "filter-pill-inactive"}
             >
-              Custom Range
+              Custom
             </button>
           </div>
 
           {preset === "custom" && (
-            <div className="flex items-center gap-1.5 text-xs">
+            <div className="flex items-center gap-1 text-xs">
               <input
                 type="date"
                 value={customFrom}
                 onChange={(e) => setCustomFrom(e.target.value)}
-                className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs shadow-xs focus:border-brand-500 focus:outline-none"
+                className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs shadow-xs focus:border-brand-500 focus:outline-none dark:border-white/10 dark:bg-[#181818] dark:text-white"
               />
               <span className="text-slate-400">to</span>
               <input
                 type="date"
                 value={customTo}
                 onChange={(e) => setCustomTo(e.target.value)}
-                className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs shadow-xs focus:border-brand-500 focus:outline-none"
+                className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs shadow-xs focus:border-brand-500 focus:outline-none dark:border-white/10 dark:bg-[#181818] dark:text-white"
               />
             </div>
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           <select
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
-            className="h-8 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 focus:border-brand-500 focus:outline-none cursor-pointer"
+            className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 focus:border-brand-500 focus:outline-none cursor-pointer dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300"
           >
             <option value="">All Categories</option>
             {categories.map((c) => (
@@ -279,7 +279,7 @@ export function ReportsView() {
           <select
             value={accountId}
             onChange={(e) => setAccountId(e.target.value)}
-            className="h-8 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 focus:border-brand-500 focus:outline-none cursor-pointer"
+            className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 focus:border-brand-500 focus:outline-none cursor-pointer dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300"
           >
             <option value="">All Accounts</option>
             {accounts.map((a) => (
@@ -292,38 +292,38 @@ export function ReportsView() {
       </div>
 
       {/* Summary KPI Cards (Fixed Position, Matching All Other Sections) */}
-      <dl className="mb-2.5 grid grid-cols-2 gap-2.5 sm:grid-cols-4 shrink-0">
+      <dl className="mb-2 grid grid-cols-2 gap-2 sm:grid-cols-4 shrink-0">
         {/* Total Expenses */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <dt className="text-[11px] font-medium text-slate-500">Total Expenses</dt>
-            <Receipt className="h-3.5 w-3.5 text-rose-500" />
+            <dt className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Total Expenses</dt>
+            <Receipt className="h-3.5 w-3.5 text-rose-500 shrink-0" />
           </div>
-          <dd className="num mt-0.5 text-lg font-bold text-rose-700 md:text-xl">
+          <dd className="num mt-0.5 text-base sm:text-lg font-bold text-rose-700 md:text-xl dark:text-rose-400">
             {loading && !report ? (
               <Skeleton className="mt-1 h-6 w-20" />
             ) : (
               formatINR(report?.totalExpensePaise ?? 0)
             )}
           </dd>
-          <p className="text-[10px] text-slate-400 truncate">
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">
             {report?.expenseCount ?? report?.transactionCount ?? 0} expenses logged
           </p>
         </div>
 
         {/* Total Income */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <dt className="text-[11px] font-medium text-slate-500">Total Income</dt>
+            <dt className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Total Income</dt>
             {isIncomePos ? (
-              <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
+              <TrendingUp className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
             ) : (
-              <TrendingDown className="h-3.5 w-3.5 text-rose-600" />
+              <TrendingDown className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
             )}
           </div>
           <dd
-            className={`num mt-0.5 text-lg font-bold md:text-xl ${
-              isIncomePos ? "text-emerald-700" : "text-rose-700"
+            className={`num mt-0.5 text-base sm:text-lg font-bold md:text-xl ${
+              isIncomePos ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"
             }`}
           >
             {loading && !report ? (
@@ -334,24 +334,24 @@ export function ReportsView() {
               formatINR(totalIncome)
             )}
           </dd>
-          <p className="text-[10px] text-slate-400 truncate">
-            Recorded earnings & P&L
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">
+            Earnings & P&L
           </p>
         </div>
 
         {/* Net Savings (P&L) */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <dt className="text-[11px] font-medium text-slate-500">Net Savings (P&L)</dt>
+            <dt className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Net Savings (P&L)</dt>
             {isNetProfit ? (
-              <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
+              <TrendingUp className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
             ) : (
-              <TrendingDown className="h-3.5 w-3.5 text-rose-600" />
+              <TrendingDown className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
             )}
           </div>
           <dd
-            className={`num mt-0.5 text-lg font-bold md:text-xl ${
-              isNetProfit ? "text-emerald-700" : "text-rose-700"
+            className={`num mt-0.5 text-base sm:text-lg font-bold md:text-xl ${
+              isNetProfit ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"
             }`}
           >
             {loading && !report ? (
@@ -362,11 +362,11 @@ export function ReportsView() {
               formatINR(netSavings)
             )}
           </dd>
-          <p className="text-[10px] text-slate-400 truncate">Income − Expenses</p>
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">Income − Expenses</p>
         </div>
 
         {/* Savings Rate */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
             <dt className="text-[11px] font-medium text-slate-500">Savings Rate</dt>
             <Percent className="h-3.5 w-3.5 text-slate-400" />

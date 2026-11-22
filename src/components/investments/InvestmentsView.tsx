@@ -78,13 +78,13 @@ export function InvestmentsView() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+      <div className="mb-2 sm:mb-2.5 flex flex-wrap items-center justify-between gap-2 sm:gap-3 shrink-0">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">Investments & Capital</h1>
-          <p className="mt-0.5 text-xs text-slate-500">Track stocks, mutual funds, and IPO movements separately from everyday spending.</p>
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">Investments & Capital</h1>
+          <p className="mt-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400">Track stocks, mutual funds, and IPO movements separately from everyday spending.</p>
         </div>
-        <Button onClick={() => { setEditingTrade(null); setTradeModalOpen(true); }} className="h-9 px-3.5 text-xs font-semibold shadow-xs">
-          <Plus className="h-4 w-4" aria-hidden />
+        <Button onClick={() => { setEditingTrade(null); setTradeModalOpen(true); }} className="h-8 sm:h-9 px-2.5 sm:px-3.5 text-xs font-semibold shadow-xs">
+          <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />
           Record trade
         </Button>
       </div>
@@ -107,69 +107,69 @@ export function InvestmentsView() {
 
       {/* Financial Summary Cards */}
       <div className="mb-2 grid grid-cols-2 gap-2 sm:grid-cols-4 shrink-0">
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
-          <p className="text-[11px] font-medium text-slate-500">Invested Capital</p>
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
+          <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Invested Capital</p>
           {loading && !data ? (
             <Skeleton className="mt-1 h-6 w-24" />
           ) : (
-            <p className="num mt-0.5 text-lg font-bold md:text-xl text-slate-900">
+            <p className="num mt-0.5 text-base sm:text-lg font-bold md:text-xl text-slate-900 dark:text-white">
               {formatINR(data?.totalInvestedPaise ?? 0)}
             </p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">Total cost basis of holdings</p>
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">Total cost basis</p>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
-          <p className="text-[11px] font-medium text-slate-500">Current Market Value</p>
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
+          <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Current Market Value</p>
           {loading && !data ? (
             <Skeleton className="mt-1 h-6 w-24" />
           ) : data?.totalMarketValuePaise !== null ? (
-            <p className="num mt-0.5 text-lg font-bold md:text-xl text-indigo-700">
+            <p className="num mt-0.5 text-base sm:text-lg font-bold md:text-xl text-indigo-700 dark:text-indigo-400">
               {formatINR(data?.totalMarketValuePaise ?? 0)}
             </p>
           ) : (
-            <div className="mt-0.5 flex items-center gap-1.5 text-amber-600">
+            <div className="mt-0.5 flex items-center gap-1 text-amber-600">
               <span className="text-xs font-semibold">Unconfigured</span>
-              <span className="rounded bg-amber-50 px-1 py-0.5 text-[10px] font-medium text-amber-700">Set prices</span>
+              <span className="rounded bg-amber-50 px-1 py-0.5 text-[9px] font-medium text-amber-700">Set</span>
             </div>
           )}
-          <p className="text-[10px] text-slate-400 truncate">
-            {data?.hasUnconfiguredPrices ? "Configure market prices below" : "Live portfolio valuation"}
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">
+            {data?.hasUnconfiguredPrices ? "Set prices below" : "Live portfolio valuation"}
           </p>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
-          <p className="text-[11px] font-medium text-slate-500">Realized P&L</p>
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
+          <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Realized P&L</p>
           {loading && !data ? (
             <Skeleton className="mt-1 h-6 w-24" />
           ) : (
             <div className="mt-0.5 flex items-center gap-1">
               {(data?.totalRealizedGainPaise ?? 0) >= 0 ? (
-                <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
+                <TrendingUp className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
               ) : (
-                <TrendingDown className="h-3.5 w-3.5 text-red-600" />
+                <TrendingDown className="h-3.5 w-3.5 text-red-600 dark:text-rose-400 shrink-0" />
               )}
-              <p className={`num text-lg font-bold md:text-xl ${(data?.totalRealizedGainPaise ?? 0) >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+              <p className={`num text-base sm:text-lg font-bold md:text-xl ${(data?.totalRealizedGainPaise ?? 0) >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-red-600 dark:text-rose-400"}`}>
                 {formatINR(data?.totalRealizedGainPaise ?? 0)}
               </p>
             </div>
           )}
-          <p className="text-[10px] text-slate-400 truncate">Net booked gain from sales</p>
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">Net booked gain</p>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
-          <p className="text-[11px] font-medium text-slate-500">IPO Blocked Funds</p>
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
+          <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">IPO Blocked Funds</p>
           {loading && !data ? (
             <Skeleton className="mt-1 h-6 w-24" />
           ) : (
             <div className="mt-0.5 flex items-center gap-1">
-              <Clock className="h-3.5 w-3.5 text-amber-500" />
-              <p className="num text-lg font-bold md:text-xl text-amber-700">
+              <Clock className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+              <p className="num text-base sm:text-lg font-bold md:text-xl text-amber-700 dark:text-amber-400">
                 {formatINR(data?.totalIpoBlockedPaise ?? 0)}
               </p>
             </div>
           )}
-          <p className="text-[10px] text-slate-400 truncate">Escrow / capital movements</p>
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">Escrow / capital</p>
         </div>
       </div>
 

@@ -173,22 +173,22 @@ export function BorrowView() {
   return (
     <div className="flex flex-col flex-1 min-h-0">
       {/* Header Bar */}
-      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+      <div className="mb-2 sm:mb-2.5 flex flex-wrap items-center justify-between gap-2 sm:gap-3 shrink-0">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">Borrow & Lend</h1>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">Borrow & Lend</h1>
+          <p className="mt-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400">
             Track money lent to borrowers and borrowed from lenders, repayment dates, and settlement status.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <Button
             onClick={() => {
               setEditingRecord(null);
               setFormOpen(true);
             }}
-            className="h-9 px-3.5 text-xs font-semibold shadow-xs"
+            className="h-8 sm:h-9 px-2.5 sm:px-3.5 text-xs font-semibold shadow-xs"
           >
-            <Plus className="h-4 w-4 mr-1.5" aria-hidden />
+            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" aria-hidden />
             Record Entry
           </Button>
         </div>
@@ -218,23 +218,23 @@ export function BorrowView() {
       )}
 
       {/* KPI Cards Grid */}
-      <div className="mb-2 grid grid-cols-2 gap-2 sm:grid-cols-5 shrink-0">
+      <div className="mb-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5 shrink-0">
         {/* Net Balance */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-slate-500">Net Due Balance</span>
-            <HandCoins className="h-3.5 w-3.5 text-slate-400" />
+            <span className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Net Due Balance</span>
+            <HandCoins className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 shrink-0" />
           </div>
           {loading ? (
             <Skeleton className="mt-1 h-6 w-20" />
           ) : (
             <p
-              className={`num mt-0.5 text-lg font-bold md:text-xl ${
+              className={`num mt-0.5 text-base sm:text-lg font-bold md:text-xl ${
                 kpiMetrics.netBalancePaise > 0
-                  ? "text-emerald-700"
+                  ? "text-emerald-700 dark:text-emerald-400"
                   : kpiMetrics.netBalancePaise < 0
-                  ? "text-rose-700"
-                  : "text-slate-800"
+                  ? "text-rose-700 dark:text-rose-400"
+                  : "text-slate-800 dark:text-zinc-200"
               }`}
             >
               {kpiMetrics.netBalancePaise > 0
@@ -242,7 +242,7 @@ export function BorrowView() {
                 : formatINR(kpiMetrics.netBalancePaise)}
             </p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">
             {kpiMetrics.netBalancePaise > 0
               ? "To receive back"
               : kpiMetrics.netBalancePaise < 0
@@ -252,73 +252,75 @@ export function BorrowView() {
         </div>
 
         {/* You Lent (To Receive) */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-slate-500">You Lent (Given)</span>
-            <ArrowUpRight className="h-3.5 w-3.5 text-emerald-600" />
+            <span className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">You Lent (Given)</span>
+            <ArrowUpRight className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
           </div>
           {loading ? (
             <Skeleton className="mt-1 h-6 w-20" />
           ) : (
-            <p className="num mt-0.5 text-lg font-bold text-emerald-700 md:text-xl">
+            <p className="num mt-0.5 text-base sm:text-lg font-bold text-emerald-700 md:text-xl dark:text-emerald-400">
               {formatINR(kpiMetrics.pendingLentPaise)}
             </p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">
             {kpiMetrics.pendingLentCount} pending borrower(s)
           </p>
         </div>
 
         {/* You Borrowed (To Pay) */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-slate-500">You Borrowed (Taken)</span>
-            <ArrowDownLeft className="h-3.5 w-3.5 text-amber-600" />
+            <span className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">You Borrowed (Taken)</span>
+            <ArrowDownLeft className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
           </div>
           {loading ? (
             <Skeleton className="mt-1 h-6 w-20" />
           ) : (
-            <p className="num mt-0.5 text-lg font-bold text-amber-700 md:text-xl">
+            <p className="num mt-0.5 text-base sm:text-lg font-bold text-amber-700 md:text-xl dark:text-amber-400">
               {formatINR(kpiMetrics.pendingBorrowedPaise)}
             </p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">
             {kpiMetrics.pendingBorrowedCount} pending lender(s)
           </p>
         </div>
 
         {/* Settled / Returned */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-slate-500">Settled / Returned</span>
-            <CheckCircle2 className="h-3.5 w-3.5 text-slate-400" />
+            <span className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Settled / Returned</span>
+            <CheckCircle2 className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 shrink-0" />
           </div>
           {loading ? (
             <Skeleton className="mt-1 h-6 w-20" />
           ) : (
-            <p className="num mt-0.5 text-lg font-bold text-slate-800 md:text-xl">
+            <p className="num mt-0.5 text-base sm:text-lg font-bold text-slate-800 md:text-xl dark:text-zinc-200">
               {formatINR(kpiMetrics.settledTotalPaise)}
             </p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">
             {kpiMetrics.settledCount} settled record(s)
           </p>
         </div>
 
         {/* Total Records */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="col-span-2 sm:col-span-1 rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-slate-500">Total Entries</span>
-            <Users className="h-3.5 w-3.5 text-slate-400" />
+            <span className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Total Entries</span>
+            <Users className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 shrink-0" />
           </div>
           {loading ? (
             <Skeleton className="mt-1 h-6 w-14" />
           ) : (
-            <p className="num mt-0.5 text-lg font-bold text-slate-900 md:text-xl">
+            <p className="num mt-0.5 text-base sm:text-lg font-bold text-slate-900 md:text-xl dark:text-white">
               {kpiMetrics.totalCount}
             </p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">In active view</p>
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">
+            {filteredRecords.length !== records.length ? "In filtered view" : "All records"}
+          </p>
         </div>
       </div>
 

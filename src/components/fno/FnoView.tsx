@@ -226,10 +226,10 @@ export function FnoView() {
   return (
     <div className="flex flex-col flex-1 min-h-0">
       {/* Header Bar */}
-      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+      <div className="mb-2 sm:mb-2.5 flex flex-wrap items-center justify-between gap-2 sm:gap-3 shrink-0">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold tracking-tight text-slate-900">F&O Trading</h1>
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">F&O Trading</h1>
             {/* Year Switcher */}
             {availableYears.length > 0 && (
               <div className="filter-capsule">
@@ -253,30 +253,30 @@ export function FnoView() {
               </div>
             )}
           </div>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <p className="mt-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400">
             Daily trading journal for Futures & Options with Call/Put tracking, bought & sold prices, charges, and profit/loss.
           </p>
         </div>
 
         {/* Actions on the right */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <Button
             variant="secondary"
             onClick={() => setContractNoteModalOpen(true)}
-            className="h-9 px-3.5 text-xs font-semibold shadow-xs gap-1.5"
+            className="h-8 sm:h-9 px-2.5 sm:px-3.5 text-xs font-semibold shadow-xs gap-1 sm:gap-1.5"
           >
-            <Upload className="h-4 w-4" aria-hidden />
-            Upload Contract Note
+            <Upload className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />
+            <span><span className="hidden sm:inline">Upload </span>Contract Note</span>
           </Button>
           <Button
             onClick={() => {
               setEditingTrade(null);
               setFormOpen(true);
             }}
-            className="h-9 px-3.5 text-xs font-semibold shadow-xs"
+            className="h-8 sm:h-9 px-2.5 sm:px-3.5 text-xs font-semibold shadow-xs"
           >
-            <Plus className="h-4 w-4" aria-hidden />
-            Record F&O trade
+            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />
+            Record trade
           </Button>
         </div>
       </div>
@@ -311,23 +311,23 @@ export function FnoView() {
       )}
 
       {/* KPI Metric Cards */}
-      <div className="mb-2 grid grid-cols-2 gap-2 sm:grid-cols-5 shrink-0">
+      <div className="mb-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5 shrink-0">
         {/* Total Net P&L */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] font-medium text-slate-500">Net Realized P&L</p>
+            <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Net Realized P&L</p>
             {kpiMetrics.netPnlPaise >= 0 ? (
-              <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
+              <TrendingUp className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
             ) : (
-              <TrendingDown className="h-3.5 w-3.5 text-rose-600" />
+              <TrendingDown className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
             )}
           </div>
           {loading && !data ? (
             <Skeleton className="mt-1 h-6 w-24" />
           ) : (
             <p
-              className={`num mt-0.5 text-lg font-bold md:text-xl ${
-                kpiMetrics.netPnlPaise >= 0 ? "text-emerald-700" : "text-rose-700"
+              className={`num mt-0.5 text-base sm:text-lg font-bold md:text-xl ${
+                kpiMetrics.netPnlPaise >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"
               }`}
             >
               {kpiMetrics.netPnlPaise >= 0
@@ -335,21 +335,21 @@ export function FnoView() {
                 : formatINR(kpiMetrics.netPnlPaise)}
             </p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">After brokerage & charges</p>
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">After brokerage & charges</p>
         </div>
 
         {/* Today's Net P&L */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] font-medium text-slate-500">Today&apos;s P&L</p>
-            <Activity className="h-3.5 w-3.5 text-brand-600" />
+            <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Today&apos;s P&L</p>
+            <Activity className="h-3.5 w-3.5 text-brand-600 dark:text-brand-400 shrink-0" />
           </div>
           {loading && !data ? (
             <Skeleton className="mt-1 h-6 w-24" />
           ) : (
             <p
-              className={`num mt-0.5 text-lg font-bold md:text-xl ${
-                kpiMetrics.todayNetPnlPaise >= 0 ? "text-emerald-700" : "text-rose-700"
+              className={`num mt-0.5 text-base sm:text-lg font-bold md:text-xl ${
+                kpiMetrics.todayNetPnlPaise >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"
               }`}
             >
               {kpiMetrics.todayNetPnlPaise >= 0
@@ -357,58 +357,58 @@ export function FnoView() {
                 : formatINR(kpiMetrics.todayNetPnlPaise)}
             </p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">
-            {kpiMetrics.todayTradesCount} trade(s) logged today
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">
+            {kpiMetrics.todayTradesCount} trade(s) today
           </p>
         </div>
 
         {/* Win Rate */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] font-medium text-slate-500">Win Rate</p>
-            <Award className="h-3.5 w-3.5 text-amber-500" />
+            <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Win Rate</p>
+            <Award className="h-3.5 w-3.5 text-amber-500 shrink-0" />
           </div>
           {loading && !data ? (
             <Skeleton className="mt-1 h-6 w-16" />
           ) : kpiMetrics.winRatePct !== null ? (
-            <p className="num mt-0.5 text-lg font-bold text-amber-600 md:text-xl">
+            <p className="num mt-0.5 text-base sm:text-lg font-bold text-amber-600 md:text-xl dark:text-amber-400">
               {kpiMetrics.winRatePct}%
             </p>
           ) : (
-            <p className="num mt-0.5 text-lg font-semibold text-slate-400">—</p>
+            <p className="num mt-0.5 text-base sm:text-lg font-semibold text-slate-400">—</p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">
             {kpiMetrics.winTrades}W / {kpiMetrics.lossTrades}L
           </p>
         </div>
 
         {/* Total Charges Paid */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+        <div className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] font-medium text-slate-500">Total Charges</p>
-            <Receipt className="h-3.5 w-3.5 text-slate-400" />
+            <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Total Charges</p>
+            <Receipt className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 shrink-0" />
           </div>
           {loading && !data ? (
             <Skeleton className="mt-1 h-6 w-20" />
           ) : (
-            <p className="num mt-0.5 text-lg font-bold text-slate-800 md:text-xl">
+            <p className="num mt-0.5 text-base sm:text-lg font-bold text-slate-800 md:text-xl dark:text-zinc-200">
               {formatINR(kpiMetrics.chargesPaise)}
             </p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">Brokerage & taxes</p>
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">Brokerage & taxes</p>
         </div>
 
         {/* Total Trades */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
-          <p className="text-[11px] font-medium text-slate-500">Total Trades</p>
+        <div className="col-span-2 sm:col-span-1 rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
+          <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">Total Trades</p>
           {loading && !data ? (
             <Skeleton className="mt-1 h-6 w-14" />
           ) : (
-            <p className="num mt-0.5 text-lg font-bold text-slate-900 md:text-xl">
+            <p className="num mt-0.5 text-base sm:text-lg font-bold text-slate-900 md:text-xl dark:text-white">
               {kpiMetrics.tradesCount}
             </p>
           )}
-          <p className="text-[10px] text-slate-400 truncate">
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">
             {selectedYear !== null ||
             dateFilter !== "all" ||
             segmentFilter !== "all" ||
@@ -422,29 +422,24 @@ export function FnoView() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2.5 rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs shrink-0">
-        <div className="relative min-w-[14rem] flex-1 flex items-center">
-          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-xs shrink-0 dark:border-white/10 dark:bg-[#141414]">
+        <div className="relative w-full sm:w-auto sm:min-w-[14rem] sm:flex-1 flex items-center">
+          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
           <input
             type="search"
             placeholder="Search symbol, strike, or note..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-3 text-xs md:text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none transition-colors"
+            className="h-8 sm:h-9 w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs md:text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none transition-colors dark:border-white/10 dark:bg-[#181818] dark:text-white"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-1.5 text-xs">
-          <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
-            <Filter className="h-3.5 w-3.5 text-slate-400" />
-            Filter:
-          </span>
-
+        <div className="flex flex-wrap items-center gap-1.5 text-xs w-full sm:w-auto justify-between sm:justify-start">
           {/* Market Segment Filter */}
           <select
             value={segmentFilter}
             onChange={(e) => setSegmentFilter(e.target.value)}
-            className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 focus:border-brand-500 focus:outline-none transition-colors cursor-pointer"
+            className="h-8 sm:h-9 flex-1 sm:flex-initial rounded-lg border border-slate-200 bg-white px-2 sm:px-2.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 focus:border-brand-500 focus:outline-none transition-colors cursor-pointer dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300"
           >
             <option value="all">All Segments</option>
             <option value="equity">Equity / Index F&O</option>
@@ -455,7 +450,7 @@ export function FnoView() {
           <select
             value={instrumentFilter}
             onChange={(e) => setInstrumentFilter(e.target.value)}
-            className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 focus:border-brand-500 focus:outline-none transition-colors cursor-pointer"
+            className="h-8 sm:h-9 flex-1 sm:flex-initial rounded-lg border border-slate-200 bg-white px-2 sm:px-2.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 focus:border-brand-500 focus:outline-none transition-colors cursor-pointer dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300"
           >
             <option value="all">All Instruments</option>
             <option value="call">Call (CE)</option>
@@ -467,7 +462,7 @@ export function FnoView() {
           <select
             value={outcomeFilter}
             onChange={(e) => setOutcomeFilter(e.target.value)}
-            className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 focus:border-brand-500 focus:outline-none transition-colors cursor-pointer"
+            className="h-8 sm:h-9 flex-1 sm:flex-initial rounded-lg border border-slate-200 bg-white px-2 sm:px-2.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 focus:border-brand-500 focus:outline-none transition-colors cursor-pointer dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300"
           >
             <option value="all">All Outcomes</option>
             <option value="profit">Profitable Only</option>
@@ -486,7 +481,7 @@ export function FnoView() {
                 }
               }
             }}
-            className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 focus:border-brand-500 focus:outline-none transition-colors cursor-pointer"
+            className="h-8 sm:h-9 flex-1 sm:flex-initial rounded-lg border border-slate-200 bg-white px-2 sm:px-2.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 focus:border-brand-500 focus:outline-none transition-colors cursor-pointer dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300"
           >
             <option value="all">All Time</option>
             <option value="today">Today Only</option>
@@ -498,13 +493,13 @@ export function FnoView() {
       </div>
 
       {/* Daily Trade Log Header Bar */}
-      <div className="mb-2 flex items-center justify-between shrink-0">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700">Daily Trade Log</h2>
+      <div className="mb-1.5 flex items-center justify-between shrink-0">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-zinc-300">Daily Trade Log</h2>
         <Link
           href="/income"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition"
+          className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300"
         >
-          <IndianRupee className="h-3.5 w-3.5 text-slate-600" />
+          <IndianRupee className="h-3.5 w-3.5 text-slate-600 dark:text-zinc-400" />
           <span>View Income</span>
         </Link>
       </div>

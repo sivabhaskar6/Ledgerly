@@ -238,59 +238,59 @@ export function IncomeView() {
   return (
     <div className="flex flex-col flex-1 min-h-0">
       {/* Header Bar */}
-      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+      <div className="mb-2 sm:mb-2.5 flex flex-wrap items-center justify-between gap-2 sm:gap-3 shrink-0">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">Income</h1>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">Income</h1>
+          <p className="mt-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400">
             Profit and money earned (including realized F&O trading gains/losses and IPO listing gains). Original capital is tracked separately under Capital.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <Link
             href="/fno"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition"
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300"
           >
-            <CandlestickChart className="h-3.5 w-3.5 text-slate-600" />
+            <CandlestickChart className="h-3.5 w-3.5 text-slate-600 dark:text-zinc-400" />
             <span>F&O Journal</span>
           </Link>
           <Link
             href="/ipo"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition"
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300"
           >
-            <Rocket className="h-3.5 w-3.5 text-slate-600" />
+            <Rocket className="h-3.5 w-3.5 text-slate-600 dark:text-zinc-400" />
             <span>IPO Gains</span>
           </Link>
           <Button
             onClick={() => setEditing("new")}
-            className="h-9 px-3.5 text-xs font-semibold shadow-xs"
+            className="h-8 sm:h-9 px-2.5 sm:px-3.5 text-xs font-semibold shadow-xs"
           >
-            <Plus className="h-4 w-4" aria-hidden />
+            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />
             Add income
           </Button>
         </div>
       </div>
 
       {/* KPI Cards */}
-      <dl className="mb-2.5 grid grid-cols-2 gap-2.5 sm:grid-cols-2 lg:grid-cols-4 shrink-0">
+      <dl className="mb-2 grid grid-cols-2 gap-2 sm:grid-cols-2 lg:grid-cols-4 shrink-0">
         {cards.map(({ label, val, hint }) => {
           const isPos = (val ?? 0) >= 0;
           return (
             <div
               key={label}
-              className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs"
+              className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]"
             >
               <div className="flex items-center justify-between">
-                <dt className="text-[11px] font-medium text-slate-500">{label}</dt>
+                <dt className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400 truncate">{label}</dt>
                 {val !== undefined &&
                   (isPos ? (
-                    <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
+                    <TrendingUp className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                   ) : (
-                    <TrendingDown className="h-3.5 w-3.5 text-rose-600" />
+                    <TrendingDown className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
                   ))}
               </div>
               <dd
-                className={`num mt-0.5 text-lg font-bold md:text-xl ${
-                  isPos ? "text-emerald-700" : "text-rose-700"
+                className={`num mt-0.5 text-base sm:text-lg font-bold md:text-xl ${
+                  isPos ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"
                 }`}
               >
                 {loading && allRows.length === 0 ? (
@@ -301,7 +301,7 @@ export function IncomeView() {
                   ? `+${formatINR(val)}`
                   : formatINR(val)}
               </dd>
-              <p className="text-[10px] text-slate-400 truncate">{hint}</p>
+              <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">{hint}</p>
             </div>
           );
         })}
@@ -320,9 +320,9 @@ export function IncomeView() {
       )}
 
       {/* Filter and Search Bar */}
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-xs shrink-0">
-        <div className="relative min-w-[14rem] flex-1 flex items-center">
-          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-xs shrink-0 dark:border-white/10 dark:bg-[#141414]">
+        <div className="relative w-full sm:w-auto sm:min-w-[14rem] sm:flex-1 flex items-center">
+          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
           <input
             type="text"
             value={search}
@@ -331,11 +331,11 @@ export function IncomeView() {
               setPage(0);
             }}
             placeholder="Search title, source, or note..."
-            className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-3 text-xs md:text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none transition-colors"
+            className="h-8 sm:h-9 w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs md:text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none transition-colors dark:border-white/10 dark:bg-[#181818] dark:text-white"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+        <div className="flex flex-wrap items-center gap-1.5 text-xs w-full sm:w-auto justify-between sm:justify-start">
           {/* Source Filter */}
           <select
             value={sourceFilter}
@@ -343,7 +343,7 @@ export function IncomeView() {
               setSourceFilter(e.target.value);
               setPage(0);
             }}
-            className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 focus:border-brand-500 focus:outline-none transition-colors cursor-pointer"
+            className="h-8 sm:h-9 flex-1 sm:flex-initial rounded-lg border border-slate-200 bg-white px-2 sm:px-2.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 focus:border-brand-500 focus:outline-none transition-colors cursor-pointer dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300"
           >
             <option value="all">All Sources</option>
             <option value="fno_trading">F&O Trading</option>
@@ -362,7 +362,7 @@ export function IncomeView() {
               setOutcomeFilter(e.target.value);
               setPage(0);
             }}
-            className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 focus:border-brand-500 focus:outline-none transition-colors cursor-pointer"
+            className="h-8 sm:h-9 flex-1 sm:flex-initial rounded-lg border border-slate-200 bg-white px-2 sm:px-2.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 focus:border-brand-500 focus:outline-none transition-colors cursor-pointer dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300"
           >
             <option value="all">All Outcomes</option>
             <option value="profit">Profits / Inflows Only</option>
@@ -376,7 +376,7 @@ export function IncomeView() {
               setDateFilter(e.target.value);
               setPage(0);
             }}
-            className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 focus:border-brand-500 focus:outline-none transition-colors cursor-pointer"
+            className="h-8 sm:h-9 flex-1 sm:flex-initial rounded-lg border border-slate-200 bg-white px-2 sm:px-2.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 focus:border-brand-500 focus:outline-none transition-colors cursor-pointer dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300"
           >
             <option value="all">All Time</option>
             <option value="today">Today Only</option>
@@ -414,14 +414,14 @@ export function IncomeView() {
                     setDateFilter("all");
                     setPage(0);
                   }}
-                  className="h-9 px-3.5 text-xs font-semibold shadow-xs"
+                  className="h-8 sm:h-9 px-3.5 text-xs font-semibold shadow-xs"
                 >
                   Clear filters
                 </Button>
               ) : (
                 <Button
                   onClick={() => setEditing("new")}
-                  className="h-9 px-3.5 text-xs font-semibold shadow-xs"
+                  className="h-8 sm:h-9 px-3.5 text-xs font-semibold shadow-xs"
                 >
                   <Plus className="h-4 w-4" aria-hidden />
                   Add income
@@ -431,8 +431,8 @@ export function IncomeView() {
           />
         ) : (
           <>
-            <div className={`flex-1 min-h-0 overflow-y-auto rounded-card border border-slate-200 bg-white shadow-sm ${loading ? "opacity-60" : ""}`}>
-              <ul className="divide-y divide-slate-100">
+            <div className={`flex-1 min-h-0 overflow-y-auto rounded-card border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-[#141414] ${loading ? "opacity-60" : ""}`}>
+              <ul className="divide-y divide-slate-100 dark:divide-white/5">
                 {paginatedRows.map((r) => {
                   const isProfit = r.amount_paise >= 0;
                   const isFno = r.source === "fno_trading";
@@ -441,49 +441,49 @@ export function IncomeView() {
                   return (
                     <li
                       key={r.id}
-                      className="flex items-center justify-between gap-3 px-4 py-2.5 transition hover:bg-slate-50/70"
+                      className="flex items-center justify-between gap-2.5 px-3 py-2 sm:px-4 sm:py-2.5 transition hover:bg-slate-50/70 dark:hover:bg-white/[0.03]"
                     >
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="truncate text-xs md:text-sm font-semibold text-slate-900">{r.title}</p>
+                        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                          <p className="truncate text-xs md:text-sm font-semibold text-slate-900 dark:text-zinc-100">{r.title}</p>
                           {isFno && (
-                            <span className="inline-flex shrink-0 items-center rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-700">
-                              F&O Trade
+                            <span className="inline-flex shrink-0 items-center rounded-full border border-violet-200 bg-violet-50 px-1.5 py-0.2 text-[9px] sm:text-[10px] font-semibold text-violet-700 dark:border-violet-800 dark:bg-violet-950/60 dark:text-violet-300">
+                              F&O
                             </span>
                           )}
                           {isIpo && (
-                            <span className="inline-flex shrink-0 items-center rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
-                              IPO Listing
+                            <span className="inline-flex shrink-0 items-center rounded-full border border-blue-200 bg-blue-50 px-1.5 py-0.2 text-[9px] sm:text-[10px] font-semibold text-blue-700 dark:border-blue-800 dark:bg-blue-950/60 dark:text-blue-300">
+                              IPO
                             </span>
                           )}
                         </div>
-                        <p className="mt-0.5 text-[11px] text-slate-500">
+                        <p className="mt-0.5 text-[10px] sm:text-[11px] text-slate-500 dark:text-zinc-400">
                           {sourceLabel(r.source)} · {displayDate(r.occurred_on)}
                         </p>
                         {r.note && (
-                          <p className="mt-0.5 truncate text-[11px] text-slate-500">
+                          <p className="mt-0.5 truncate text-[10px] sm:text-[11px] text-slate-500 dark:text-zinc-400">
                             {r.note}
                           </p>
                         )}
                       </div>
-                      <div className="flex shrink-0 items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
                         <span
                           className={`num font-bold text-xs md:text-sm ${
-                            isProfit ? "text-emerald-700" : "text-rose-700"
+                            isProfit ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"
                           }`}
                         >
                           {isProfit ? `+${formatINR(r.amount_paise)}` : formatINR(r.amount_paise)}
                         </span>
                         <button
                           aria-label={`Edit ${r.title}`}
-                          className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
+                          className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-white"
                           onClick={() => setEditing(r)}
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
                         <button
                           aria-label={`Delete ${r.title}`}
-                          className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-red-600"
+                          className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 hover:text-red-600 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-red-400"
                           onClick={() => setDeleting(r)}
                         >
                           <Trash2 className="h-3.5 w-3.5" />

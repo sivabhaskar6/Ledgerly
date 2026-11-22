@@ -13,12 +13,12 @@ export function ExpenseSummary({ summary, loading }: { summary: Summary | null; 
   return (
     <dl className="mb-2 grid grid-cols-2 gap-2 lg:grid-cols-4 shrink-0">
       {items.map((i) => (
-        <div key={i.label} className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
-          <dt className="text-[11px] font-medium text-slate-500">{i.label}</dt>
-          <dd className="num mt-0.5 text-lg font-bold md:text-xl text-slate-900">
+        <div key={i.label} className="rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
+          <dt className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-zinc-400">{i.label}</dt>
+          <dd className="num mt-0.5 text-base sm:text-lg font-bold md:text-xl text-slate-900 dark:text-white">
             {loading && !summary ? <Skeleton className="h-6 w-20" /> : (i.value ?? "—")}
           </dd>
-          <p className="text-[10px] text-slate-400 truncate">{i.sub}</p>
+          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-500 truncate">{i.sub}</p>
         </div>
       ))}
     </dl>

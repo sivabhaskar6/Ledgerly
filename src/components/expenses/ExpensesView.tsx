@@ -47,27 +47,27 @@ export function ExpensesView() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+      <div className="mb-2 sm:mb-2.5 flex flex-wrap items-center justify-between gap-2 sm:gap-3 shrink-0">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">Expenses</h1>
-          <p className="mt-0.5 text-xs text-slate-500">Every expense you record, saved to your account.</p>
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">Expenses</h1>
+          <p className="mt-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400">Every expense you record, saved to your account.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <Button
             variant="secondary"
             onClick={() => setImportOpen(true)}
             disabled={lookups.loading || !!lookups.error}
-            className="h-9 px-3 text-xs font-medium shadow-xs"
+            className="h-8 sm:h-9 px-2.5 sm:px-3 text-xs font-medium shadow-xs"
           >
-            <Upload className="h-4 w-4" aria-hidden />
-            Import statement
+            <Upload className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />
+            <span>Import<span className="hidden sm:inline"> statement</span></span>
           </Button>
           <Button
             onClick={openAdd}
             disabled={lookups.loading || !!lookups.error}
-            className="h-9 px-3.5 text-xs font-semibold shadow-xs"
+            className="h-8 sm:h-9 px-2.5 sm:px-3.5 text-xs font-semibold shadow-xs"
           >
-            <Plus className="h-4 w-4" aria-hidden />
+            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />
             Add expense
           </Button>
         </div>

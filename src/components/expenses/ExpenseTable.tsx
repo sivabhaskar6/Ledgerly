@@ -65,18 +65,18 @@ export function ExpenseTable({ rows, sort, dir, onSort, onView, onEdit, onDelete
         </table>
       </div>
       {/* Mobile card list */}
-      <ul className="space-y-2 md:hidden overflow-y-auto flex-1 min-h-0">
+      <ul className="space-y-1.5 md:hidden overflow-y-auto flex-1 min-h-0 pr-0.5">
         {rows.map((e) => (
-          <li key={e.id} className="rounded-card border border-slate-200 bg-white p-3">
-            <div className="flex items-start justify-between gap-3">
+          <li key={e.id} className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]">
+            <div className="flex items-start justify-between gap-2.5">
               <div className="min-w-0">
-                <p className="truncate font-medium">{e.title}</p>
-                <p className="mt-0.5 text-xs text-slate-500">{e.category?.name ?? "—"} · {displayDate(e.occurred_on)}</p>
+                <p className="truncate text-xs font-semibold text-slate-900 dark:text-zinc-100">{e.title}</p>
+                <p className="mt-0.5 text-[11px] text-slate-500 dark:text-zinc-400">{e.category?.name ?? "—"} · {displayDate(e.occurred_on)}</p>
               </div>
-              <p className="num shrink-0 font-semibold text-rose-700">{formatINR(e.amount_paise)}</p>
+              <p className="num shrink-0 text-xs font-bold text-rose-700 dark:text-rose-400">{formatINR(e.amount_paise)}</p>
             </div>
-            {e.note && <p className="mt-1 line-clamp-2 text-xs text-slate-500">{e.note}</p>}
-            <div className="mt-1 border-t border-slate-100 pt-1"><Actions e={e} onView={onView} onEdit={onEdit} onDelete={onDelete} /></div>
+            {e.note && <p className="mt-1 line-clamp-1 text-[11px] text-slate-500 dark:text-zinc-400">{e.note}</p>}
+            <div className="mt-1 border-t border-slate-100 dark:border-white/5 pt-1"><Actions e={e} onView={onView} onEdit={onEdit} onDelete={onDelete} /></div>
           </li>
         ))}
       </ul>

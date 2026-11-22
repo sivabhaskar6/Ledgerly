@@ -392,49 +392,52 @@ export function DashboardView() {
   return (
     <div className="flex flex-col flex-1 min-h-0">
       {/* Header Bar */}
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-3 shrink-0">
+      <div className="mb-2 flex items-center justify-between gap-3 shrink-0">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">Dashboard</h1>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Dashboard</h1>
+          <p className="mt-0.5 text-xs text-slate-500 dark:text-zinc-400">
             A real-time overview of your finances.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href="/accounts"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300 dark:hover:bg-[#222222] dark:hover:text-white"
-          >
-            <Landmark className="h-3.5 w-3.5 text-slate-600 dark:text-zinc-400" />
-            <span>Accounts</span>
-          </Link>
-          <Link
-            href="/income"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300 dark:hover:bg-[#222222] dark:hover:text-white"
-          >
-            <Plus className="h-3.5 w-3.5 text-slate-600 dark:text-zinc-400" />
-            <span>Income</span>
-          </Link>
-          <Link
-            href="/fno"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300 dark:hover:bg-[#222222] dark:hover:text-white"
-          >
-            <CandlestickChart className="h-3.5 w-3.5 text-slate-600 dark:text-zinc-400" />
-            <span>F&O</span>
-          </Link>
-          <Link
-            href="/ipo"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300 dark:hover:bg-[#222222] dark:hover:text-white"
-          >
-            <Rocket className="h-3.5 w-3.5 text-slate-600 dark:text-zinc-400" />
-            <span>IPO</span>
-          </Link>
-          <Link
-            href="/borrowing"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300 dark:hover:bg-[#222222] dark:hover:text-white"
-          >
-            <HandCoins className="h-3.5 w-3.5 text-slate-600 dark:text-zinc-400" />
-            <span>Borrow & Lend</span>
-          </Link>
+        <div className="flex items-center gap-2">
+          {/* Quick Access links: hidden on mobile, visible on tablet/desktop */}
+          <div className="hidden sm:flex sm:items-center sm:gap-2">
+            <Link
+              href="/accounts"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300 dark:hover:bg-[#222222] dark:hover:text-white"
+            >
+              <Landmark className="h-3.5 w-3.5 text-slate-600 dark:text-zinc-400" />
+              <span>Accounts</span>
+            </Link>
+            <Link
+              href="/income"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300 dark:hover:bg-[#222222] dark:hover:text-white"
+            >
+              <Plus className="h-3.5 w-3.5 text-slate-600 dark:text-zinc-400" />
+              <span>Income</span>
+            </Link>
+            <Link
+              href="/fno"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300 dark:hover:bg-[#222222] dark:hover:text-white"
+            >
+              <CandlestickChart className="h-3.5 w-3.5 text-slate-600 dark:text-zinc-400" />
+              <span>F&O</span>
+            </Link>
+            <Link
+              href="/ipo"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300 dark:hover:bg-[#222222] dark:hover:text-white"
+            >
+              <Rocket className="h-3.5 w-3.5 text-slate-600 dark:text-zinc-400" />
+              <span>IPO</span>
+            </Link>
+            <Link
+              href="/borrowing"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 transition dark:border-white/10 dark:bg-[#181818] dark:text-zinc-300 dark:hover:bg-[#222222] dark:hover:text-white"
+            >
+              <HandCoins className="h-3.5 w-3.5 text-slate-600 dark:text-zinc-400" />
+              <span>Borrow & Lend</span>
+            </Link>
+          </div>
           <Link href="/expenses">
             <Button className="h-9 px-3.5 text-xs font-semibold shadow-xs">
               <Plus className="h-4 w-4 mr-1.5" aria-hidden />
@@ -477,14 +480,14 @@ export function DashboardView() {
         {cards.map((c) => (
           <div
             key={c.label}
-            className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]"
+            className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5 shadow-xs dark:border-white/10 dark:bg-[#141414]"
           >
             <div className="flex items-center justify-between gap-1">
-              <p className="text-[11px] font-medium text-slate-500 truncate dark:text-zinc-400">{c.label}</p>
+              <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 truncate dark:text-zinc-400">{c.label}</p>
               {c.href && (
                 <Link
                   href={c.href}
-                  className="text-[11px] font-medium text-brand-700 hover:underline shrink-0 dark:text-zinc-400 dark:hover:text-white transition-colors"
+                  className="text-[10px] sm:text-[11px] font-medium text-brand-700 hover:underline shrink-0 dark:text-zinc-400 dark:hover:text-white transition-colors"
                 >
                   View →
                 </Link>
@@ -495,24 +498,24 @@ export function DashboardView() {
                 <Skeleton className="h-6 w-24" />
               ) : c.value !== null ? (
                 <p
-                  className={`num text-lg font-bold md:text-xl ${
+                  className={`num text-base sm:text-lg font-bold md:text-xl ${
                     c.colorClass ??
                     (c.value.startsWith("-")
-                      ? "text-rose-700"
+                      ? "text-rose-700 dark:text-rose-400"
                       : c.value.startsWith("+")
-                      ? "text-emerald-700"
-                      : "text-slate-900")
+                      ? "text-emerald-700 dark:text-emerald-400"
+                      : "text-slate-900 dark:text-white")
                   }`}
                 >
                   {c.value}
                 </p>
               ) : (
-                <p className="num text-lg font-bold text-slate-300 md:text-xl">—</p>
+                <p className="num text-base sm:text-lg font-bold text-slate-300 md:text-xl dark:text-zinc-600">—</p>
               )}
             </div>
             <div className="min-h-[14px]">
               {c.note && (
-                <p className="text-[10px] text-slate-400 truncate dark:text-zinc-500">{c.note}</p>
+                <p className="text-[9px] sm:text-[10px] text-slate-400 truncate dark:text-zinc-500">{c.note}</p>
               )}
             </div>
           </div>
