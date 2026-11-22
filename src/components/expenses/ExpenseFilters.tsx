@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 
 const PRESETS: { key: Preset; label: string }[] = [
   { key: "today", label: "Today" }, { key: "yesterday", label: "Yesterday" }, { key: "week", label: "This week" },
-  { key: "month", label: "This month" }, { key: "year", label: "This year" },
+  { key: "month", label: "This month" }, { key: "year", label: "This year" }, { key: "fy", label: "This FY" },
 ];
 const ctl = "h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-900 shadow-xs focus:border-brand-500 focus:outline-none transition-colors";
 

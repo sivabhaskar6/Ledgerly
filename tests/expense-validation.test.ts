@@ -24,12 +24,17 @@ describe("dates and search", () => {
     expect(parseISODate("2026-02-30")).toBeNull();
     expect(parseISODate("11/10/2026")).toBeNull();
   });
-  it("builds preset ranges", () => {
+  it("builds preset ranges including Indian Financial Year", () => {
     const now = new Date(2026, 9, 11);
     expect(presetRange("today", now)).toEqual({ from: "2026-10-11", to: "2026-10-11" });
     expect(presetRange("month", now)).toEqual({ from: "2026-10-01", to: "2026-10-31" });
     expect(presetRange("year", now)).toEqual({ from: "2026-01-01", to: "2026-12-31" });
     expect(presetRange("week", now).from).toBe("2026-10-05");
+    // Indian FY: Oct 2026 is in FY 2026-27 (2026-04-01 to 2027-03-31)
+    expect(presetRange("fy", now)).toEqual({ from: "2026-04-01", to: "2027-03-31" });
+    // Date before April: Feb 2026 is in FY 2025-26 (2025-04-01 to 2026-03-31)
+    const earlyYear = new Date(2026, 1, 15);
+    expect(presetRange("fy", earlyYear)).toEqual({ from: "2025-04-01", to: "2026-03-31" });
   });
   it("sanitizes search input for PostgREST filters", () => {
     expect(sanitizeSearch("a,b(c)")).toBe("a b c");

@@ -167,6 +167,9 @@ export function FnoView() {
       } else if (dateFilter === "year") {
         const y = presetRange("year");
         if (t.occurred_on < y.from || t.occurred_on > y.to) return false;
+      } else if (dateFilter === "fy") {
+        const fy = presetRange("fy");
+        if (t.occurred_on < fy.from || t.occurred_on > fy.to) return false;
       }
 
       return true;
@@ -475,7 +478,7 @@ export function FnoView() {
             onChange={(e) => {
               const val = e.target.value;
               setDateFilter(val);
-              if (val === "today" || val === "week" || val === "month" || val === "year") {
+              if (val === "today" || val === "week" || val === "month" || val === "year" || val === "fy") {
                 if (selectedYear !== null && selectedYear !== new Date().getFullYear()) {
                   setSelectedYear(null);
                 }
@@ -488,6 +491,7 @@ export function FnoView() {
             <option value="week">This Week</option>
             <option value="month">This Month</option>
             <option value="year">This Year</option>
+            <option value="fy">This FY (Apr–Mar)</option>
           </select>
         </div>
       </div>

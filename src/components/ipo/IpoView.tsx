@@ -117,6 +117,10 @@ export function IpoView() {
         const y = presetRange("year");
         if (t.occurred_on < y.from || t.occurred_on > y.to) return false;
       }
+      if (dateFilter === "fy") {
+        const fy = presetRange("fy");
+        if (t.occurred_on < fy.from || t.occurred_on > fy.to) return false;
+      }
 
       return true;
     });
@@ -388,6 +392,7 @@ export function IpoView() {
             <option value="week">This Week</option>
             <option value="month">This Month</option>
             <option value="year">This Year</option>
+            <option value="fy">This FY (Apr–Mar)</option>
           </select>
         </div>
       </div>

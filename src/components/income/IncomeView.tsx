@@ -135,6 +135,10 @@ export function IncomeView() {
       if (dateFilter === "week" && (r.occurred_on < w.from || r.occurred_on > w.to)) return false;
       if (dateFilter === "month" && (r.occurred_on < m.from || r.occurred_on > m.to)) return false;
       if (dateFilter === "year" && (r.occurred_on < y.from || r.occurred_on > y.to)) return false;
+      if (dateFilter === "fy") {
+        const fy = presetRange("fy");
+        if (r.occurred_on < fy.from || r.occurred_on > fy.to) return false;
+      }
 
       return true;
     });
@@ -383,6 +387,7 @@ export function IncomeView() {
             <option value="week">This Week</option>
             <option value="month">This Month</option>
             <option value="year">This Year</option>
+            <option value="fy">This FY (Apr–Mar)</option>
           </select>
         </div>
       </div>

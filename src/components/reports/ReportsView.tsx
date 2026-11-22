@@ -27,14 +27,14 @@ import {
 import { fetchCategories, fetchAccounts } from "@/lib/data/expenses";
 import { errorMessage } from "@/lib/data/expenses";
 import { formatINR } from "@/lib/utils/money";
-import { displayDate, presetRange } from "@/lib/utils/dates";
+import { displayDate, presetRange, indianFinancialYearRange } from "@/lib/utils/dates";
 import type { Account, Category } from "@/types/db";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 
-type PresetOption = "month" | "year" | "all" | "custom";
+type PresetOption = "month" | "year" | "fy" | "all" | "custom";
 type TxFilter = "all" | "expense" | "income";
 
 const TX_PAGE_SIZE = 25;
@@ -90,6 +90,10 @@ export function ReportsView() {
         const r = presetRange("year");
         from = r.from;
         to = r.to;
+      } else if (preset === "fy") {
+        const r = presetRange("fy");
+        from = r.from;
+        to = r.to;
       } else if (preset === "custom") {
         from = customFrom || undefined;
         to = customTo || undefined;
@@ -141,6 +145,11 @@ export function ReportsView() {
       const yName = format(now, "yyyy");
       return `Year ${yName} (${displayDate(r.from)} – ${displayDate(r.to)})`;
     }
+    if (preset === "fy") {
+      const now = new Date();
+      const fy = indianFinancialYearRange(now);
+      return `Financial Year ${fy.label} (${displayDate(fy.from)} – ${displayDate(fy.to)})`;
+    }
     if (preset === "all") {
       return "All Time Records";
     }
@@ -159,6 +168,10 @@ export function ReportsView() {
     }
     if (preset === "year") {
       return `ledgerly_report_${format(new Date(), "yyyy")}`;
+    }
+    if (preset === "fy") {
+      const fy = indianFinancialYearRange();
+      return `ledgerly_report_${fy.label.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`;
     }
     if (preset === "custom") {
       return `ledgerly_report_custom_${customFrom || "start"}_${customTo || "end"}`;
@@ -344,6 +357,13 @@ export function ReportsView() {
               className={preset === "year" ? "filter-pill-active" : "filter-pill-inactive"}
             >
               This Year
+            </button>
+            <button
+              onClick={() => setPreset("fy")}
+              className={preset === "fy" ? "filter-pill-active" : "filter-pill-inactive"}
+              title="Indian Financial Year (01 Apr – 31 Mar)"
+            >
+              <span className="hidden sm:inline">This </span>{indianFinancialYearRange().label}
             </button>
             <button
               onClick={() => setPreset("all")}

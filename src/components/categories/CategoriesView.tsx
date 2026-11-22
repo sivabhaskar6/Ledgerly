@@ -23,7 +23,11 @@ type Totals = Record<string, { total: number; count: number }>;
 const schema = z.object({ name: z.string().trim().min(1, "Enter a name").max(60, "Keep the name under 60 characters"), color: z.string() });
 type FormValues = z.infer<typeof schema>;
 const RANGES: { key: Preset | "all"; label: string }[] = [
-  { key: "all", label: "All time" }, { key: "month", label: "This month" }, { key: "year", label: "This year" }, { key: "week", label: "This week" },
+  { key: "all", label: "All time" },
+  { key: "month", label: "This month" },
+  { key: "year", label: "This year" },
+  { key: "fy", label: "This FY" },
+  { key: "week", label: "This week" },
 ];
 
 export function CategoriesView() {

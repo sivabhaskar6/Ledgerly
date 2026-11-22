@@ -14,13 +14,14 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
 
-type PeriodFilter = "today" | "week" | "month" | "year" | "all";
+type PeriodFilter = "today" | "week" | "month" | "year" | "fy" | "all";
 
 const PERIODS: { key: PeriodFilter; label: string }[] = [
   { key: "today", label: "Today" },
   { key: "week", label: "This Week" },
   { key: "month", label: "This Month" },
   { key: "year", label: "This Year" },
+  { key: "fy", label: "This FY" },
   { key: "all", label: "All Time" },
 ];
 
@@ -159,6 +160,15 @@ export function DashboardView() {
         .filter((i) => i.occurred_on >= y.from && i.occurred_on <= y.to)
         .reduce((acc, curr) => acc + curr.amount_paise, 0);
       expUrl = `/expenses?from=${y.from}&to=${y.to}`;
+    } else if (period === "fy") {
+      const fy = presetRange("fy");
+      label = "This FY";
+      filteredExp = allExpenses.filter((e) => e.occurred_on >= fy.from && e.occurred_on <= fy.to);
+      spent = filteredExp.reduce((acc, curr) => acc + curr.amount_paise, 0);
+      income = allIncome
+        .filter((i) => i.occurred_on >= fy.from && i.occurred_on <= fy.to)
+        .reduce((acc, curr) => acc + curr.amount_paise, 0);
+      expUrl = `/expenses?from=${fy.from}&to=${fy.to}`;
     } else {
       label = "All Time";
       filteredExp = allExpenses;
@@ -277,6 +287,29 @@ export function DashboardView() {
       card3 = {
         label: "Spent all time",
         value: !loading ? formatINR(periodSpentPaise) : null,
+        href: "/expenses",
+        colorClass: undefined,
+        note: undefined,
+      };
+    } else if (period === "fy") {
+      const fy = presetRange("fy");
+      card1 = {
+        label: "Spent this month",
+        value: !loading ? formatINR(monthExpense) : null,
+        href: `/expenses?from=${m.from}&to=${m.to}`,
+        colorClass: undefined,
+        note: undefined,
+      };
+      card2 = {
+        label: "Spent this FY",
+        value: !loading ? formatINR(periodSpentPaise) : null,
+        href: `/expenses?from=${fy.from}&to=${fy.to}`,
+        colorClass: undefined,
+        note: undefined,
+      };
+      card3 = {
+        label: "Spent all time",
+        value: !loading ? formatINR(allExpenses.reduce((acc, curr) => acc + curr.amount_paise, 0)) : null,
         href: "/expenses",
         colorClass: undefined,
         note: undefined,
