@@ -1,8 +1,10 @@
 "use client";
 import { useCallback, useEffect, useState, useMemo } from "react";
+import { format } from "date-fns";
 import {
   FileSpreadsheet,
   FileText,
+  Download,
   TrendingUp,
   TrendingDown,
   Receipt,
@@ -19,6 +21,7 @@ import {
   fetchFullReport,
   exportReportToCSV,
   exportReportToExcel,
+  exportReportToPDF,
   type FullReport,
 } from "@/lib/data/reports";
 import { fetchCategories, fetchAccounts } from "@/lib/data/expenses";
@@ -49,6 +52,7 @@ export function ReportsView() {
   const [report, setReport] = useState<FullReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState<"excel" | "csv" | "pdf" | null>(null);
 
   // In-scope transaction search, filter & pagination state
   const [txSearch, setTxSearch] = useState("");
@@ -114,13 +118,73 @@ export function ReportsView() {
     void loadReport();
   }, [loadReport]);
 
+  const selectedCategoryName = useMemo(() => {
+    if (!categoryId) return "All Categories";
+    return categories.find((c) => c.id === categoryId)?.name || "Selected Category";
+  }, [categoryId, categories]);
+
+  const selectedAccountName = useMemo(() => {
+    if (!accountId) return "All Accounts";
+    return accounts.find((a) => a.id === accountId)?.name || "Selected Account";
+  }, [accountId, accounts]);
+
+  const dateRangeLabel = useMemo(() => {
+    if (preset === "month") {
+      const now = new Date();
+      const r = presetRange("month", now);
+      const mName = format(now, "MMMM yyyy");
+      return `${mName} (${displayDate(r.from)} – ${displayDate(r.to)})`;
+    }
+    if (preset === "year") {
+      const now = new Date();
+      const r = presetRange("year", now);
+      const yName = format(now, "yyyy");
+      return `Year ${yName} (${displayDate(r.from)} – ${displayDate(r.to)})`;
+    }
+    if (preset === "all") {
+      return "All Time Records";
+    }
+    if (preset === "custom") {
+      const fromStr = customFrom ? displayDate(customFrom) : "Beginning";
+      const toStr = customTo ? displayDate(customTo) : "Present";
+      return `Custom Range: ${fromStr} to ${toStr}`;
+    }
+    return "Selected Range";
+  }, [preset, customFrom, customTo]);
+
+  const exportFileBase = useMemo(() => {
+    const sanitize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "_");
+    if (preset === "month") {
+      return `ledgerly_report_${sanitize(format(new Date(), "MMMM_yyyy"))}`;
+    }
+    if (preset === "year") {
+      return `ledgerly_report_${format(new Date(), "yyyy")}`;
+    }
+    if (preset === "custom") {
+      return `ledgerly_report_custom_${customFrom || "start"}_${customTo || "end"}`;
+    }
+    return "ledgerly_report_all_time";
+  }, [preset, customFrom, customTo]);
+
   function handleExportCSV() {
     if (!report || report.transactions.length === 0) {
       notify("error", "No data available to export.");
       return;
     }
-    exportReportToCSV(report, `ledgerly_report_${preset}.csv`);
-    notify("success", "Exported report as CSV.");
+    setIsExporting("csv");
+    try {
+      exportReportToCSV(report, {
+        dateRangeLabel,
+        categoryLabel: selectedCategoryName,
+        accountLabel: selectedAccountName,
+        filename: `${exportFileBase}.csv`,
+      });
+      notify("success", "Exported complete transaction ledger as CSV.");
+    } catch {
+      notify("error", "Failed to generate CSV export.");
+    } finally {
+      setIsExporting(null);
+    }
   }
 
   function handleExportExcel() {
@@ -128,8 +192,41 @@ export function ReportsView() {
       notify("error", "No data available to export.");
       return;
     }
-    exportReportToExcel(report, `ledgerly_report_${preset}.xlsx`);
-    notify("success", "Exported report as Excel (.xlsx).");
+    setIsExporting("excel");
+    try {
+      exportReportToExcel(report, {
+        dateRangeLabel,
+        categoryLabel: selectedCategoryName,
+        accountLabel: selectedAccountName,
+        filename: `${exportFileBase}.xlsx`,
+      });
+      notify("success", "Exported crystal-clear report as Excel (.xlsx).");
+    } catch {
+      notify("error", "Failed to generate Excel export.");
+    } finally {
+      setIsExporting(null);
+    }
+  }
+
+  function handleExportPDF() {
+    if (!report || report.transactions.length === 0) {
+      notify("error", "No data available to export.");
+      return;
+    }
+    setIsExporting("pdf");
+    try {
+      exportReportToPDF(report, {
+        dateRangeLabel,
+        categoryLabel: selectedCategoryName,
+        accountLabel: selectedAccountName,
+        filename: `${exportFileBase}.pdf`,
+      });
+      notify("success", "Exported executive financial statement as PDF.");
+    } catch {
+      notify("error", "Failed to generate PDF export.");
+    } finally {
+      setIsExporting(null);
+    }
   }
 
   // Filtered transactions in scope
@@ -180,23 +277,42 @@ export function ReportsView() {
             Audited spending summaries, P&L breakdown, and multi-sheet statement exports.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+
+        {/* Download Buttons: Excel, CSV, PDF (PC & Mobile Responsive) */}
+        <div className="grid grid-cols-3 gap-1.5 w-full sm:w-auto sm:flex sm:items-center sm:gap-2">
+          <Button
+            onClick={handleExportExcel}
+            disabled={loading || isExporting !== null || (report?.transactions.length ?? 0) === 0}
+            className="h-8 sm:h-9 px-2 sm:px-3 text-xs font-semibold shadow-xs justify-center flex-1 sm:flex-initial"
+            title="Download full multi-sheet Excel report (.xlsx)"
+          >
+            <FileSpreadsheet className="h-3.5 w-3.5 mr-1 shrink-0 text-emerald-300 dark:text-emerald-400" aria-hidden />
+            <span>{isExporting === "excel" ? "Exporting..." : "Excel"}</span>
+            <span className="hidden sm:inline ml-0.5 text-[11px] opacity-80">(.xlsx)</span>
+          </Button>
+
           <Button
             variant="secondary"
             onClick={handleExportCSV}
-            disabled={loading || (report?.transactions.length ?? 0) === 0}
-            className="h-8 sm:h-9 px-2.5 sm:px-3 text-xs font-semibold shadow-xs"
+            disabled={loading || isExporting !== null || (report?.transactions.length ?? 0) === 0}
+            className="h-8 sm:h-9 px-2 sm:px-3 text-xs font-semibold shadow-xs justify-center flex-1 sm:flex-initial"
+            title="Download full data CSV (.csv)"
           >
-            <FileText className="h-3.5 w-3.5 mr-1 text-slate-600 dark:text-zinc-400" aria-hidden />
-            CSV
+            <FileText className="h-3.5 w-3.5 mr-1 shrink-0 text-slate-600 dark:text-zinc-400" aria-hidden />
+            <span>{isExporting === "csv" ? "Exporting..." : "CSV"}</span>
+            <span className="hidden sm:inline ml-0.5 text-[11px] opacity-80">(.csv)</span>
           </Button>
+
           <Button
-            onClick={handleExportExcel}
-            disabled={loading || (report?.transactions.length ?? 0) === 0}
-            className="h-8 sm:h-9 px-2.5 sm:px-3 text-xs font-semibold shadow-xs"
+            variant="secondary"
+            onClick={handleExportPDF}
+            disabled={loading || isExporting !== null || (report?.transactions.length ?? 0) === 0}
+            className="h-8 sm:h-9 px-2 sm:px-3 text-xs font-semibold shadow-xs justify-center flex-1 sm:flex-initial"
+            title="Download executive printable PDF statement"
           >
-            <FileSpreadsheet className="h-3.5 w-3.5 mr-1" aria-hidden />
-            Excel
+            <Download className="h-3.5 w-3.5 mr-1 shrink-0 text-rose-600 dark:text-rose-400" aria-hidden />
+            <span>{isExporting === "pdf" ? "Exporting..." : "PDF"}</span>
+            <span className="hidden sm:inline ml-0.5 text-[11px] opacity-80">Statement</span>
           </Button>
         </div>
       </div>

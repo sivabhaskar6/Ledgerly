@@ -1,5 +1,7 @@
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { paiseToRupeesString } from "@/lib/utils/money";
 
@@ -303,72 +305,720 @@ export async function fetchFullReport(db: SupabaseClient, filter: ReportFilter):
   };
 }
 
-export function exportReportToCSV(report: FullReport, filename = "ledgerly_report.csv") {
-  const rows = report.transactions.map((t) => ({
-    Date: t.date,
-    Type: t.type === "income" ? "Income / P&L" : "Expense",
-    Category: t.category,
-    Title: t.title,
-    "Amount (INR)": paiseToRupeesString(t.amountPaise),
-    Account: t.account,
-    "Payment Method": t.method,
-    Note: t.note,
-  }));
+export type ExportReportOptions = {
+  dateRangeLabel?: string;
+  categoryLabel?: string;
+  accountLabel?: string;
+  filename?: string;
+};
 
-  const csv = Papa.unparse(rows);
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
+export function formatINRNumber(paise: number): string {
+  const abs = Math.abs(paise) / 100;
+  const parts = abs.toFixed(2).split(".");
+  let intPart = parts[0] ?? "0";
+  const decPart = parts[1] ?? "00";
+  if (intPart.length > 3) {
+    const last3 = intPart.substring(intPart.length - 3);
+    const rest = intPart.substring(0, intPart.length - 3);
+    intPart = rest.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + "," + last3;
+  }
+  const sign = paise < 0 ? "-" : "";
+  return `${sign}${intPart}.${decPart}`;
 }
 
-export function exportReportToExcel(report: FullReport, filename = "ledgerly_report.xlsx") {
+export function normalizeExportOptions(
+  opt?: string | ExportReportOptions,
+  defaultExt = "xlsx"
+): {
+  dateRangeLabel: string;
+  categoryLabel: string;
+  accountLabel: string;
+  filename: string;
+} {
+  if (typeof opt === "string") {
+    return {
+      dateRangeLabel: "Selected Period",
+      categoryLabel: "All Categories",
+      accountLabel: "All Accounts",
+      filename: opt.endsWith(`.${defaultExt}`) ? opt : `${opt}.${defaultExt}`,
+    };
+  }
+  const dateRangeLabel = opt?.dateRangeLabel || "Selected Period";
+  const categoryLabel = opt?.categoryLabel || "All Categories";
+  const accountLabel = opt?.accountLabel || "All Accounts";
+  const rawFilename = opt?.filename || `ledgerly_financial_report`;
+  const filename = rawFilename.endsWith(`.${defaultExt}`)
+    ? rawFilename
+    : `${rawFilename}.${defaultExt}`;
+  return { dateRangeLabel, categoryLabel, accountLabel, filename };
+}
+
+export function buildReportCSV(
+  report: FullReport,
+  options?: string | ExportReportOptions
+): { filename: string; content: string } {
+  const opt = normalizeExportOptions(options, "csv");
+  const sections: (string | number)[][] = [];
+
+  // 1. Header & Scope
+  sections.push(["LEDGERLY FINANCIAL REPORT & AUDIT STATEMENT"]);
+  sections.push(["Scope", opt.dateRangeLabel]);
+  sections.push(["Category Scope", opt.categoryLabel]);
+  sections.push(["Account Scope", opt.accountLabel]);
+  sections.push(["Generated On", new Date().toLocaleString("en-IN")]);
+  sections.push([]);
+
+  // 2. Executive Financial Summary
+  sections.push(["=== EXECUTIVE FINANCIAL SUMMARY ==="]);
+  sections.push(["Metric", "Amount (INR)", "Scope Details"]);
+  sections.push([
+    "Total Income & P&L Credits",
+    Number(paiseToRupeesString(report.totalIncomePaise)),
+    `${report.incomeCount} records`,
+  ]);
+  sections.push([
+    "Total Expenses Debited",
+    Number(paiseToRupeesString(report.totalExpensePaise)),
+    `${report.expenseCount} records`,
+  ]);
+  sections.push([
+    "Net Savings / Net P&L",
+    Number(paiseToRupeesString(report.netSavingsPaise)),
+    report.netSavingsPaise >= 0 ? "Net Surplus (+)" : "Net Deficit (-)",
+  ]);
+  sections.push([
+    "Savings Retention Rate",
+    report.savingsRatePct !== null ? `${report.savingsRatePct}%` : "N/A",
+    "% of income retained",
+  ]);
+  sections.push([
+    "Total Scope Transactions",
+    report.transactionCount,
+    `${report.expenseCount} Expenses + ${report.incomeCount} Income/Trades`,
+  ]);
+  sections.push([]);
+
+  // 3. Category Breakdown (Expenses)
+  sections.push(["=== CATEGORY BREAKDOWN (EXPENSES) ==="]);
+  sections.push([
+    "Rank",
+    "Category Name",
+    "Total Spent (INR)",
+    "Share (%)",
+    "Transaction Count",
+  ]);
+  report.categoryRows.forEach((c, i) => {
+    sections.push([
+      i + 1,
+      c.categoryName,
+      Number(paiseToRupeesString(c.amountPaise)),
+      `${c.percentage}%`,
+      c.count,
+    ]);
+  });
+  sections.push([
+    "",
+    "Total Expenses",
+    Number(paiseToRupeesString(report.totalExpensePaise)),
+    "100.0%",
+    report.expenseCount,
+  ]);
+  sections.push([]);
+
+  // 4. Account Activity Distribution
+  if (report.accountRows.length > 0) {
+    sections.push(["=== ACCOUNT ACTIVITY DISTRIBUTION ==="]);
+    sections.push(["Rank", "Account Name", "Total Activity (INR)", "Transaction Count"]);
+    report.accountRows.forEach((a, i) => {
+      sections.push([
+        i + 1,
+        a.accountName,
+        Number(paiseToRupeesString(a.amountPaise)),
+        a.count,
+      ]);
+    });
+    sections.push([]);
+  }
+
+  // 5. Complete In-Scope Transactions Ledger
+  sections.push(["=== COMPLETE IN-SCOPE TRANSACTIONS LEDGER ==="]);
+  sections.push([
+    "Date",
+    "Flow Type",
+    "Category / Source",
+    "Title",
+    "Description / Note",
+    "Account",
+    "Payment Method",
+    "Net Amount (INR)",
+    "Cash Flow Direction",
+  ]);
+  report.transactions.forEach((t) => {
+    const isInc = t.type === "income";
+    const sign = isInc ? (t.amountPaise >= 0 ? "+" : "-") : "-";
+    sections.push([
+      t.date,
+      isInc ? "Income / Trading" : "Expense",
+      t.category,
+      t.title,
+      t.note || "",
+      t.account,
+      t.method,
+      `${sign}${paiseToRupeesString(Math.abs(t.amountPaise))}`,
+      isInc
+        ? t.amountPaise >= 0
+          ? "Credit (+)"
+          : "Trading Loss (-)"
+        : "Debit (-)",
+    ]);
+  });
+  sections.push([
+    "TOTALS",
+    `${report.transactions.length} records`,
+    "",
+    "",
+    "",
+    "",
+    "Net Balance:",
+    Number(paiseToRupeesString(report.netSavingsPaise)),
+    report.netSavingsPaise >= 0 ? "Surplus (+)" : "Deficit (-)",
+  ]);
+
+  const content = Papa.unparse(sections);
+  return { filename: opt.filename, content };
+}
+
+export function exportReportToCSV(
+  report: FullReport,
+  options?: string | ExportReportOptions
+) {
+  const { filename, content } = buildReportCSV(report, options);
+  if (typeof window !== "undefined" && typeof document !== "undefined") {
+    const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  return content;
+}
+
+export function buildReportExcelWorkbook(
+  report: FullReport,
+  options?: string | ExportReportOptions
+): { filename: string; workbook: XLSX.WorkBook } {
+  const opt = normalizeExportOptions(options, "xlsx");
   const wb = XLSX.utils.book_new();
 
-  // Sheet 1: Summary
-  const summaryData = [
-    ["Financial Metric", "Amount (INR)"],
-    ["Total Expenses", paiseToRupeesString(report.totalExpensePaise)],
-    ["Total Income", paiseToRupeesString(report.totalIncomePaise)],
-    ["Net Savings", paiseToRupeesString(report.netSavingsPaise)],
-    ["Savings Rate (%)", report.savingsRatePct !== null ? `${report.savingsRatePct}%` : "N/A"],
-    ["Total Transactions", String(report.transactionCount)],
-  ];
-  const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
-  XLSX.utils.book_append_sheet(wb, summarySheet, "Summary");
-
-  // Sheet 2: Categories
-  const categoryData = [
-    ["Category", "Total Spent (INR)", "Percentage", "Count"],
-    ...report.categoryRows.map((c) => [
+  // Sheet 1: Full Financial Report (Comprehensive view with All KPI Cards, Category Breakdown, Account Activity, AND Complete Transactions Ledger)
+  const fullReportAoa: (string | number)[][] = [
+    ["LEDGERLY FINANCIAL REPORT & AUDIT STATEMENT"],
+    ["Date Range:", opt.dateRangeLabel],
+    ["Category Scope:", opt.categoryLabel],
+    ["Account Scope:", opt.accountLabel],
+    ["Generated On:", new Date().toLocaleString("en-IN")],
+    [],
+    ["EXECUTIVE FINANCIAL SUMMARY", "AMOUNT (INR)", "SCOPE BREAKDOWN"],
+    [
+      "Total Income & P&L Credits",
+      Number(paiseToRupeesString(report.totalIncomePaise)),
+      `${report.incomeCount} records`,
+    ],
+    [
+      "Total Expenses Debited",
+      Number(paiseToRupeesString(report.totalExpensePaise)),
+      `${report.expenseCount} records`,
+    ],
+    [
+      "Net Savings / Net P&L",
+      Number(paiseToRupeesString(report.netSavingsPaise)),
+      report.netSavingsPaise >= 0 ? "Net Surplus (+)" : "Net Deficit (-)",
+    ],
+    [
+      "Savings Retention Rate",
+      report.savingsRatePct !== null ? `${report.savingsRatePct}%` : "N/A",
+      "% of income retained",
+    ],
+    [
+      "Total Scope Transactions",
+      report.transactionCount,
+      `${report.expenseCount} Expenses + ${report.incomeCount} Income/Trades`,
+    ],
+    [],
+    ["CATEGORY BREAKDOWN (EXPENSES)"],
+    ["Rank", "Category Name", "Total Spent (INR)", "Share (%)", "Transaction Count"],
+    ...report.categoryRows.map((c, i) => [
+      i + 1,
       c.categoryName,
-      paiseToRupeesString(c.amountPaise),
+      Number(paiseToRupeesString(c.amountPaise)),
       `${c.percentage}%`,
       c.count,
     ]),
-  ];
-  const categorySheet = XLSX.utils.aoa_to_sheet(categoryData);
-  XLSX.utils.book_append_sheet(wb, categorySheet, "Categories");
-
-  // Sheet 3: Transactions
-  const txData = [
-    ["Date", "Type", "Category", "Title", "Amount (INR)", "Account", "Payment Method", "Note"],
+    [
+      "",
+      "Total Expenses",
+      Number(paiseToRupeesString(report.totalExpensePaise)),
+      "100.0%",
+      report.expenseCount,
+    ],
+    [],
+    ["ACCOUNT ACTIVITY DISTRIBUTION"],
+    ["Rank", "Account Name", "Total Activity (INR)", "Transaction Count"],
+    ...report.accountRows.map((a, i) => [
+      i + 1,
+      a.accountName,
+      Number(paiseToRupeesString(a.amountPaise)),
+      a.count,
+    ]),
+    [],
+    ["COMPLETE IN-SCOPE TRANSACTIONS LEDGER"],
+    [
+      "Date",
+      "Flow Type",
+      "Category / Source",
+      "Title",
+      "Description / Note",
+      "Account",
+      "Payment Method",
+      "Net Amount (INR)",
+      "Cash Flow Impact",
+    ],
     ...report.transactions.map((t) => [
       t.date,
-      t.type === "income" ? "Income / P&L" : "Expense",
+      t.type === "income" ? "Income / Trading" : "Expense",
       t.category,
       t.title,
-      paiseToRupeesString(t.amountPaise),
+      t.note || "",
       t.account,
       t.method,
-      t.note,
+      Number(paiseToRupeesString(t.amountPaise)),
+      t.type === "income"
+        ? t.amountPaise >= 0
+          ? "Credit (+)"
+          : "Trading Loss (-)"
+        : "Debit (-)",
+    ]),
+    [
+      "TOTALS",
+      `${report.transactions.length} records`,
+      "",
+      "",
+      "",
+      "",
+      "Net Balance:",
+      Number(paiseToRupeesString(report.netSavingsPaise)),
+      report.netSavingsPaise >= 0 ? "Surplus (+)" : "Deficit (-)",
+    ],
+  ];
+
+  const fullReportSheet = XLSX.utils.aoa_to_sheet(fullReportAoa);
+  fullReportSheet["!cols"] = [
+    { wch: 14 },
+    { wch: 20 },
+    { wch: 26 },
+    { wch: 34 },
+    { wch: 36 },
+    { wch: 20 },
+    { wch: 16 },
+    { wch: 18 },
+    { wch: 18 },
+  ];
+  XLSX.utils.book_append_sheet(wb, fullReportSheet, "Full Financial Report");
+
+  // Sheet 2: All Transactions (Clean Tabular Data)
+  const txAoa: (string | number)[][] = [
+    ["ITEMIZED TRANSACTIONS & CASH FLOW AUDIT"],
+    ["Scope:", opt.dateRangeLabel, "Total Transactions:", report.transactions.length],
+    [],
+    [
+      "Date",
+      "Flow Type",
+      "Category / Source",
+      "Title",
+      "Description / Note",
+      "Account",
+      "Payment Method",
+      "Net Amount (INR)",
+      "Cash Flow Impact",
+    ],
+    ...report.transactions.map((t) => [
+      t.date,
+      t.type === "income" ? "Income / Trading" : "Expense",
+      t.category,
+      t.title,
+      t.note || "",
+      t.account,
+      t.method,
+      Number(paiseToRupeesString(t.amountPaise)),
+      t.type === "income"
+        ? t.amountPaise >= 0
+          ? "Credit (+)"
+          : "Trading Loss (-)"
+        : "Debit (-)",
+    ]),
+    [
+      "TOTALS",
+      `${report.transactions.length} records`,
+      "",
+      "",
+      "",
+      "",
+      "Net Balance:",
+      Number(paiseToRupeesString(report.netSavingsPaise)),
+      report.netSavingsPaise >= 0 ? "Surplus (+)" : "Deficit (-)",
+    ],
+  ];
+  const txSheet = XLSX.utils.aoa_to_sheet(txAoa);
+  txSheet["!cols"] = [
+    { wch: 13 },
+    { wch: 18 },
+    { wch: 24 },
+    { wch: 32 },
+    { wch: 36 },
+    { wch: 18 },
+    { wch: 16 },
+    { wch: 18 },
+    { wch: 18 },
+  ];
+  XLSX.utils.book_append_sheet(wb, txSheet, "All Transactions");
+
+  // Sheet 3: Category Breakdown (Deep Dive)
+  const categoryAoa: (string | number)[][] = [
+    ["CATEGORY BREAKDOWN - DETAILED AUDIT"],
+    ["Scope:", opt.dateRangeLabel],
+    [],
+    ["Rank", "Category Name", "Total Spent (INR)", "Share (%)", "Transactions", "Average / Tx (INR)"],
+    ...report.categoryRows.map((c, i) => [
+      i + 1,
+      c.categoryName,
+      Number(paiseToRupeesString(c.amountPaise)),
+      `${c.percentage}%`,
+      c.count,
+      c.count > 0 ? Number((c.amountPaise / (c.count * 100)).toFixed(2)) : 0,
+    ]),
+    [
+      "",
+      "TOTAL",
+      Number(paiseToRupeesString(report.totalExpensePaise)),
+      "100.0%",
+      report.expenseCount,
+      report.expenseCount > 0
+        ? Number((report.totalExpensePaise / (report.expenseCount * 100)).toFixed(2))
+        : 0,
+    ],
+  ];
+  const categorySheet = XLSX.utils.aoa_to_sheet(categoryAoa);
+  categorySheet["!cols"] = [
+    { wch: 8 },
+    { wch: 28 },
+    { wch: 20 },
+    { wch: 14 },
+    { wch: 16 },
+    { wch: 22 },
+  ];
+  XLSX.utils.book_append_sheet(wb, categorySheet, "Category Breakdown");
+
+  // Sheet 4: Account Distribution
+  const accountAoa: (string | number)[][] = [
+    ["ACCOUNT DISTRIBUTION - DETAILED AUDIT"],
+    ["Scope:", opt.dateRangeLabel],
+    [],
+    ["Rank", "Account Name", "Total Activity (INR)", "Transactions"],
+    ...report.accountRows.map((a, i) => [
+      i + 1,
+      a.accountName,
+      Number(paiseToRupeesString(a.amountPaise)),
+      a.count,
     ]),
   ];
-  const txSheet = XLSX.utils.aoa_to_sheet(txData);
-  XLSX.utils.book_append_sheet(wb, txSheet, "Transactions");
+  const accountSheet = XLSX.utils.aoa_to_sheet(accountAoa);
+  accountSheet["!cols"] = [
+    { wch: 8 },
+    { wch: 28 },
+    { wch: 22 },
+    { wch: 18 },
+  ];
+  XLSX.utils.book_append_sheet(wb, accountSheet, "Account Distribution");
 
-  XLSX.writeFile(wb, filename);
+  return { filename: opt.filename, workbook: wb };
+}
+
+export function exportReportToExcel(
+  report: FullReport,
+  options?: string | ExportReportOptions
+) {
+  const { filename, workbook } = buildReportExcelWorkbook(report, options);
+  if (typeof window !== "undefined" && typeof document !== "undefined") {
+    const wbout = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([wbout], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  return workbook;
+}
+
+export function buildReportPDFDoc(
+  report: FullReport,
+  options?: string | ExportReportOptions
+): { filename: string; doc: jsPDF } {
+  const opt = normalizeExportOptions(options, "pdf");
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+  // Document Branding Header
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.setTextColor(30, 41, 59);
+  doc.text("LEDGERLY", 14, 15);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(59, 130, 246);
+  doc.text("FINANCIAL STATEMENT & AUDIT REPORT", 14, 21);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text(`Scope: ${opt.dateRangeLabel}`, 14, 27);
+  doc.text(`Filters: ${opt.categoryLabel} | ${opt.accountLabel}`, 14, 32);
+  doc.text(`Generated On: ${new Date().toLocaleString("en-IN")}`, 14, 37);
+
+  // Decorative divider line
+  doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(0.5);
+  doc.line(14, 40, 196, 40);
+
+  // Section 1: Executive Financial Summary Table
+  autoTable(doc, {
+    startY: 44,
+    head: [["Executive Financial Indicator", "Amount (INR)", "Scope & Status"]],
+    body: [
+      [
+        "Total Income & P&L Credits",
+        (report.totalIncomePaise >= 0 ? "+" : "") +
+          "Rs. " +
+          formatINRNumber(report.totalIncomePaise),
+        `${report.incomeCount} records`,
+      ],
+      [
+        "Total Expenses Debited",
+        "-Rs. " + formatINRNumber(report.totalExpensePaise),
+        `${report.expenseCount} records`,
+      ],
+      [
+        "Net Savings / Net P&L",
+        (report.netSavingsPaise >= 0 ? "+Rs. " : "-Rs. ") +
+          formatINRNumber(Math.abs(report.netSavingsPaise)),
+        report.netSavingsPaise >= 0 ? "Net Surplus (+)" : "Net Deficit (-)",
+      ],
+      [
+        "Savings Retention Rate",
+        report.savingsRatePct !== null ? `${report.savingsRatePct}%` : "N/A",
+        `${report.transactionCount} total scope transactions`,
+      ],
+    ],
+    theme: "striped",
+    headStyles: {
+      fillColor: [37, 99, 235],
+      textColor: 255,
+      fontStyle: "bold",
+      fontSize: 9,
+    },
+    bodyStyles: { fontSize: 8.5, cellPadding: 2 },
+    columnStyles: {
+      0: { cellWidth: 70, fontStyle: "bold" },
+      1: { cellWidth: 45, halign: "right", fontStyle: "bold" },
+      2: { halign: "left" },
+    },
+  });
+
+  // Section 2: Category Breakdown Table
+  let currentY = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY ?? 90) + 7;
+  if (report.categoryRows.length > 0) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(30, 41, 59);
+    doc.text(`1. Category Breakdown (${report.categoryRows.length} categories)`, 14, currentY);
+
+    autoTable(doc, {
+      startY: currentY + 3,
+      head: [["#", "Category Name", "Total Spent (INR)", "Share (%)", "Transactions"]],
+      body: report.categoryRows.map((c, i) => [
+        (i + 1).toString(),
+        c.categoryName,
+        "Rs. " + formatINRNumber(c.amountPaise),
+        `${c.percentage}%`,
+        c.count.toString(),
+      ]),
+      foot: [
+        [
+          "",
+          "Total Expenses",
+          "Rs. " + formatINRNumber(report.totalExpensePaise),
+          "100.0%",
+          report.expenseCount.toString(),
+        ],
+      ],
+      theme: "grid",
+      headStyles: {
+        fillColor: [71, 85, 105],
+        textColor: 255,
+        fontStyle: "bold",
+        fontSize: 8,
+      },
+      footStyles: {
+        fillColor: [241, 245, 249],
+        textColor: [15, 23, 42],
+        fontStyle: "bold",
+        fontSize: 8,
+      },
+      bodyStyles: { fontSize: 8, cellPadding: 1.8 },
+      columnStyles: {
+        0: { cellWidth: 10, halign: "center" },
+        2: { halign: "right", fontStyle: "bold" },
+        3: { halign: "right" },
+        4: { halign: "center" },
+      },
+    });
+
+    currentY = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY ?? currentY) + 7;
+  }
+
+  // Section 3: Account Distribution Table
+  if (report.accountRows.length > 0 && currentY < 230) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(30, 41, 59);
+    doc.text(`2. Account Activity Distribution (${report.accountRows.length} accounts)`, 14, currentY);
+
+    autoTable(doc, {
+      startY: currentY + 3,
+      head: [["#", "Account Name", "Total Activity (INR)", "Transactions"]],
+      body: report.accountRows.map((a, i) => [
+        (i + 1).toString(),
+        a.accountName,
+        "Rs. " + formatINRNumber(a.amountPaise),
+        a.count.toString(),
+      ]),
+      theme: "grid",
+      headStyles: {
+        fillColor: [71, 85, 105],
+        textColor: 255,
+        fontStyle: "bold",
+        fontSize: 8,
+      },
+      bodyStyles: { fontSize: 8, cellPadding: 1.8 },
+      columnStyles: {
+        0: { cellWidth: 10, halign: "center" },
+        2: { halign: "right", fontStyle: "bold" },
+        3: { halign: "center" },
+      },
+    });
+
+    currentY = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY ?? currentY) + 7;
+  }
+
+  // Section 4: Complete In-Scope Transactions Ledger
+  if (report.transactions.length > 0) {
+    // If running near bottom of page, add page before starting transactions table
+    if (currentY > 230) {
+      doc.addPage();
+      currentY = 18;
+    }
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(30, 41, 59);
+    doc.text(
+      `3. Complete In-Scope Transactions Ledger (${report.transactions.length} records)`,
+      14,
+      currentY
+    );
+
+    autoTable(doc, {
+      startY: currentY + 3,
+      head: [["Date", "Type", "Category", "Title & Note", "Account", "Amount (INR)"]],
+      body: report.transactions.map((t) => [
+        t.date,
+        t.type === "income" ? "Income" : "Expense",
+        t.category,
+        t.note ? `${t.title} (${t.note})` : t.title,
+        t.account,
+        (t.type === "income"
+          ? t.amountPaise >= 0
+            ? "+Rs. "
+            : "-Rs. "
+          : "-Rs. ") + formatINRNumber(Math.abs(t.amountPaise)),
+      ]),
+      foot: [
+        [
+          "",
+          "",
+          "",
+          "Net Scope Balance",
+          "",
+          (report.netSavingsPaise >= 0 ? "+Rs. " : "-Rs. ") +
+            formatINRNumber(Math.abs(report.netSavingsPaise)),
+        ],
+      ],
+      theme: "grid",
+      headStyles: {
+        fillColor: [30, 41, 59],
+        textColor: 255,
+        fontStyle: "bold",
+        fontSize: 7.5,
+      },
+      footStyles: {
+        fillColor: [241, 245, 249],
+        textColor: [15, 23, 42],
+        fontStyle: "bold",
+        fontSize: 8,
+      },
+      bodyStyles: { fontSize: 7.5, cellPadding: 1.8 },
+      columnStyles: {
+        0: { cellWidth: 20, halign: "center" },
+        1: { cellWidth: 16, halign: "center" },
+        2: { cellWidth: 28 },
+        3: { cellWidth: "auto" },
+        4: { cellWidth: 22 },
+        5: { cellWidth: 28, halign: "right", fontStyle: "bold" },
+      },
+    });
+  }
+
+  // Draw running page footer on all pages
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.setDrawColor(226, 232, 240);
+    doc.line(14, 286, 196, 286);
+    doc.text("Ledgerly Financial Statement · Confidential", 14, 290);
+    doc.text(`Page ${i} of ${totalPages}`, 196, 290, { align: "right" });
+  }
+
+  return { filename: opt.filename, doc };
+}
+
+export function exportReportToPDF(
+  report: FullReport,
+  options?: string | ExportReportOptions
+) {
+  const { filename, doc } = buildReportPDFDoc(report, options);
+  if (typeof window !== "undefined") {
+    doc.save(filename);
+  }
+  return doc;
 }
