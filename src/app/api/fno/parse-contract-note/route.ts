@@ -11,82 +11,25 @@ import {
 export const runtime = "nodejs";
 
 /**
- * Extract all text from a PDF buffer using pdfjs-dist directly.
- * pdfjs-dist/legacy auto-disables workers in Node.js environments,
- * making this fully compatible with Vercel serverless functions.
+ * Extract text from a PDF buffer using pdf-parse v1.1.1.
+ * This version uses pdfjs-dist v2 which has zero browser DOM dependencies
+ * and is fully compatible with Vercel serverless Node.js functions.
  */
 async function extractPdfText(
   buffer: Buffer,
   password?: string
-): Promise<{ text: string; passwordRequired: boolean; wrongPassword: boolean }> {
-  // Dynamic import so Next.js doesn't attempt to bundle pdfjs for the browser
-  const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
+): Promise<string> {
+  // Dynamic import avoids any SSR/Edge issues
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const pdfParse = require("pdf-parse");
 
-  const data = new Uint8Array(buffer);
-
-  let passwordRequired = false;
-  let wrongPassword = false;
-
-  const loadingTask = pdfjsLib.getDocument({
-    data,
-    password: password || undefined,
-    useWorkerFetch: false,
-    isEvalSupported: false,
-    disableFontFace: true,
-  });
-
-  // Handle password prompt callback
-  loadingTask.onPassword = (
-    _updatePassword: (pw: string) => void,
-    reason: number
-  ) => {
-    // reason 1 = needs password, reason 2 = incorrect password
-    if (reason === 2) {
-      wrongPassword = true;
-    } else {
-      passwordRequired = true;
-    }
-    // Reject the loading task by not calling updatePassword
-  };
-
-  try {
-    const pdfDoc = await loadingTask.promise;
-    const numPages = pdfDoc.numPages;
-    const pageTexts: string[] = [];
-
-    for (let i = 1; i <= numPages; i++) {
-      const page = await pdfDoc.getPage(i);
-      const content = await page.getTextContent();
-      const pageText = content.items
-        .map((item) => ("str" in item ? (item.str ?? "") : ""))
-        .join(" ");
-      pageTexts.push(pageText);
-      page.cleanup();
-    }
-
-    return {
-      text: pageTexts.join("\n"),
-      passwordRequired: false,
-      wrongPassword: false,
-    };
-  } catch (err: unknown) {
-    // If password callback fired, return password flags
-    if (passwordRequired || wrongPassword) {
-      return { text: "", passwordRequired, wrongPassword };
-    }
-
-    // Check error name/message for password-related errors
-    const errMsg = String((err as Error)?.message ?? err);
-    const errName = String((err as Error)?.name ?? "");
-    if (
-      /password|encrypted|PasswordException/i.test(errMsg) ||
-      /PasswordException/i.test(errName)
-    ) {
-      return { text: "", passwordRequired: true, wrongPassword: false };
-    }
-
-    throw err;
+  const options: Record<string, unknown> = {};
+  if (password) {
+    options.password = password;
   }
+
+  const data = await pdfParse(buffer, options);
+  return data.text as string;
 }
 
 export async function POST(req: NextRequest) {
@@ -142,28 +85,42 @@ export async function POST(req: NextRequest) {
 
     const fileName = file.name.toLowerCase();
 
-    // 3. Process PDF files in-memory using pdfjs-dist
+    // 3. Process PDF files in-memory using pdf-parse v1 (Node.js native, no DOM deps)
     if (fileName.endsWith(".pdf") || file.type === "application/pdf") {
       try {
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
 
-        const { text: extractedText, passwordRequired, wrongPassword } =
-          await extractPdfText(buffer, password || undefined);
-
-        if (passwordRequired || wrongPassword) {
-          return NextResponse.json(
-            {
-              error: "PASSWORD_REQUIRED",
-              message: wrongPassword
-                ? "Incorrect password. Please try your PAN number in UPPERCASE or lowercase."
-                : "This contract note PDF is password-protected. Please enter your password (typically your PAN number in UPPERCASE or lowercase).",
-            },
-            { status: 422 }
-          );
+        let extractedText: string;
+        try {
+          extractedText = await extractPdfText(buffer, password || undefined);
+        } catch (pdfErr: unknown) {
+          const errMsg = String(
+            (pdfErr as Error)?.message ?? pdfErr
+          ).toLowerCase();
+          // Detect password-protected PDFs
+          if (
+            errMsg.includes("password") ||
+            errMsg.includes("encrypted") ||
+            errMsg.includes("no password given") ||
+            errMsg.includes("incorrect password")
+          ) {
+            const isWrong =
+              errMsg.includes("incorrect") || errMsg.includes("wrong");
+            return NextResponse.json(
+              {
+                error: "PASSWORD_REQUIRED",
+                message: isWrong
+                  ? "Incorrect password. Please try your PAN number in UPPERCASE or lowercase."
+                  : "This contract note PDF is password-protected. Please enter your password (typically your PAN number in UPPERCASE or lowercase).",
+              },
+              { status: 422 }
+            );
+          }
+          throw pdfErr;
         }
 
-        if (!extractedText.trim()) {
+        if (!extractedText || !extractedText.trim()) {
           return NextResponse.json(
             {
               error: "EMPTY_PDF",
@@ -180,7 +137,9 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
           {
             error: "PDF_PARSE_FAILED",
-            message: `Failed to read PDF: ${err instanceof Error ? err.message : "Unknown error"}`,
+            message: `Failed to read PDF: ${
+              err instanceof Error ? err.message : "Unknown error"
+            }`,
           },
           { status: 500 }
         );
