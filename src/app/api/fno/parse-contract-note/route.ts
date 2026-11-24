@@ -78,12 +78,22 @@ async function extractPdfText(
       let lastY: number | undefined;
       let pageText = "";
       for (const item of content.items) {
-        if (lastY === item.transform[5] || lastY === undefined) {
+        const y = item.transform?.[5] ?? 0;
+        if (lastY === undefined) {
           pageText += item.str;
-        } else {
+        } else if (Math.abs(y - lastY) > 2) {
           pageText += "\n" + item.str;
+        } else {
+          // Same line: preserve space between separate table cells or words
+          const prevEnds = /\s$/.test(pageText);
+          const currStarts = /^\s/.test(item.str);
+          if (!prevEnds && !currStarts && item.str.length > 0) {
+            pageText += " " + item.str;
+          } else {
+            pageText += item.str;
+          }
         }
-        lastY = item.transform[5];
+        lastY = y;
       }
 
       pages.push(pageText);

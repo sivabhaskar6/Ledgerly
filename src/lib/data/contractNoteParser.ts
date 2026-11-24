@@ -329,33 +329,25 @@ export function extractChargesSummary(text: string): {
 }
 
 /**
- * Extracts raw trade execution lines from contract note text.
- * When Annexure A / Trade Details is present (like in Groww, Zerodha, Angel One),
- * we parse executions from Annexure A to get individual executed orders, avoiding
- * the combined WAP summary from Page 1.
+ * Extracts raw trade execution lines from a given text section.
  */
-export function extractRawTradeExecutions(text: string): RawTradeExecution[] {
-  // Check if text has an Annexure / Trade Log section
-  const annexureRegex = /(?:Annexure\s*[A-Z]?|Trade\s*Details|Details\s*of\s*(?:All\s*)?Trades|Executed\s*Trades)/i;
-  const annexureMatch = text.match(annexureRegex);
-
-  let targetText = text;
-  if (annexureMatch && annexureMatch.index !== undefined) {
-    targetText = text.slice(annexureMatch.index);
-  }
-
+function parseExecutionsFromText(targetText: string): RawTradeExecution[] {
   const rawLines = targetText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
 
-  // Merge wrapped order lines (e.g. order number split across lines)
+  // Merge wrapped order lines (e.g. order number split across lines or leading order no)
   const mergedLines: string[] = [];
   for (let i = 0; i < rawLines.length; i++) {
-    const line = rawLines[i]!;
-    if (/^\d{8,25}$/.test(line) && i + 1 < rawLines.length) {
-      mergedLines.push(`${line} ${rawLines[i + 1]}`);
-      i++;
-    } else {
-      mergedLines.push(line);
+    let line = rawLines[i]!;
+    while (/^\d{3,25}$/.test(line) && i + 1 < rawLines.length) {
+      const next = rawLines[i + 1]!;
+      if (/^\d{1,10}$/.test(next) || /^\d{1,2}:\d{2}/.test(next)) {
+        i++;
+        line = `${line} ${next}`;
+      } else {
+        break;
+      }
     }
+    mergedLines.push(line);
   }
 
   const executions: RawTradeExecution[] = [];
@@ -456,6 +448,29 @@ export function extractRawTradeExecutions(text: string): RawTradeExecution[] {
   }
 
   return executions;
+}
+
+/**
+ * Extracts raw trade execution lines from contract note text.
+ * When Annexure A / Trade Details is present (like in Groww, Zerodha, Angel One),
+ * we parse executions from Annexure A to get individual executed orders, avoiding
+ * the combined WAP summary from Page 1.
+ * If Annexure A has no trades, falls back to scanning the entire document.
+ */
+export function extractRawTradeExecutions(text: string): RawTradeExecution[] {
+  // Check if text has an Annexure / Trade Log section
+  const annexureRegex = /(?:Annexure\s*[A-Z]?|Trade\s*Details|Details\s*of\s*(?:All\s*)?Trades|Executed\s*Trades)/i;
+  const annexureMatch = text.match(annexureRegex);
+
+  if (annexureMatch && annexureMatch.index !== undefined) {
+    const annexureExecs = parseExecutionsFromText(text.slice(annexureMatch.index));
+    if (annexureExecs.length > 0) {
+      return annexureExecs;
+    }
+  }
+
+  // Fallback: parse entire document (e.g. Page 1 summary table when Annexure A is absent)
+  return parseExecutionsFromText(text);
 }
 
 type ExecutionFill = {
